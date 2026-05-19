@@ -1,0 +1,12 @@
+# Runtime / user data — should never be in the repo
+billing_rates.md
+time-tracking-state.json
+project_time_tracking.md
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+*.swp

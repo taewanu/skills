@@ -56,7 +56,7 @@ If `/time-tracking` is invoked with no further input, default to `status`. After
        (b) 새 세션으로 따로 시작 (드물게 — 기존 paused는 그대로 둠)
        (c) 취소
      ```
-   - If sessions exist on **different projects**, first **check for staleness**: any session whose last open segment started >12h ago AND whose state file mtime is also >12h ago is treated as abandoned. If at least one stale session is found, route to the §"Stale-session subflow" (which handles cleanup, not live switching). Otherwise route to the §"Session conflict subflow" (which assumes both sessions are alive).
+   - If sessions exist on **different projects**, first **check for staleness**: any session whose `last_touched_iso` is >12h ago is treated as abandoned (see §"State file"). If at least one stale session is found, route to the §"Stale-session subflow" (which handles cleanup, not live switching). Otherwise route to the §"Session conflict subflow" (which assumes both sessions are alive). State file mtime is not used for this check — it's per-session, so opening a new session doesn't reset another's staleness.
 
 5. **Read previous slipped** (optional context): from same-project tracking file, find the most recent entry, extract `slipped:` line if present.
 
@@ -112,7 +112,7 @@ Triggered from `start` when one or more existing sessions look abandoned (last s
 
 - **(a) estimate**: run §"Sub-action: end" on the existing session with end time = state file mtime. Use the **switch shortcut mode** prompt (shipped only, others `TBD`) but additionally add `- needs-edit: end-time (estimated from state mtime)` to the entry so the user can grep for and correct it later. Then proceed with the new `start`.
 - **(b) manual**: prompt for an `HH:MM` (assume same date as the session's start unless user qualifies with "어제"/"yesterday" or an explicit date). Run §"Sub-action: end" with that time. Same switch-shortcut prompt for the other fields.
-- **(c) discard**: drop the session from state without writing any entry. Confirm: `<existing-project> 폐기 (entry 안 씀).` Then proceed with the new `start`.
+- **(c) discard**: same y/N gate as standalone §"Sub-action: discard" — show `<existing-project> 폐기? 시작 <HH:MM> <TZ>, 누적 Xh Ym. (y/N)` first. On `y`, drop the session from state without writing any entry and confirm `<existing-project> 폐기됨.` On `N`, fall back to the stale menu. Then proceed with the new `start`.
 - **(d) actually alive**: fall through to the §"Session conflict subflow" with its normal choices.
 
 If multiple stale sessions exist, ask per-session, OR offer "전부 폐기" / "전부 mtime으로 종료" shortcuts.
@@ -378,6 +378,7 @@ Path: `~/.claude/time-tracking-state.json`
       "tracking_file": "/Users/wanu/.claude/projects/.../memory/project_time_tracking.md",
       "previous_slipped": "<one line, from last entry in tracking file>",
       "status": "active",
+      "last_touched_iso": "2026-05-19T14:30:00+07:00",
       "segments": [
         {"start_iso": "2026-05-19T14:30:00+07:00", "end_iso": null}
       ]
@@ -387,6 +388,8 @@ Path: `~/.claude/time-tracking-state.json`
 ```
 
 The `sessions` list can hold multiple entries. Each session is independent — it has its own segments, status (`active` or `paused`), and tracking file.
+
+**last_touched_iso**: timestamp of the most recent state mutation to *this specific session* — set on `start`, refreshed on `pause`, `resume`, or any field write. Used by the staleness check in §"Sub-action: start" step 4 so that opening or modifying *other* sessions never resets it. A session goes stale when `now - last_touched_iso > 12h`.
 
 **Segments**: a session is a list of `{start_iso, end_iso}` segments. The currently-open segment has `end_iso: null`. Pausing closes the open segment (set `end_iso` to now) and flips `status` to `paused`. Resuming appends a new `{start_iso: now, end_iso: null}` and flips `status` back to `active`. Duration = sum of `(end - start)` across all segments, with `null` end treated as "now" for live computation.
 

@@ -55,11 +55,16 @@ cp ~/.claude/skills/time-tracking/templates/billing_rates.md ~/.claude/billing_r
 
 | Sub-action | What it does |
 |---|---|
-| `start` | Open a new session, auto-capture time/TZ/project |
-| `end` | Close current session, write entry |
-| `status` | Show current open session (default if no sub-action) |
-| `analyze [period]` | Breakdown by category/project/tool/location |
-| `invoice <client> [period]` | Generate invoice draft |
+| `start` | Open a new session, auto-capture time/TZ/project. If another session is open, prompts to switch / pause / run concurrent / cancel. |
+| `end [project]` | Close a session and write entry. Asks which one if multiple are active. |
+| `pause [project]` | Suspend a session without writing an entry. Accumulates time across resumes. |
+| `resume [project]` | Re-open a paused session. |
+| `switch <project>` | Shortcut: close current with minimal questions, start new. |
+| `discard [project]` | Drop a session without writing an entry (for accidental starts or forgotten sessions where the time is lost). |
+| `end <project> --at <time>` | Close a session with a manually-set end time (for "I quit at 17:00 yesterday"). |
+| `status` | Show all open and paused sessions, with a ⚠️ flag on stale ones (default if no sub-action). |
+| `analyze [period]` | Breakdown by category/project/tool/location. |
+| `invoice <client> [period]` | Generate invoice draft. |
 
 ## Period syntax (for analyze/invoice)
 
@@ -85,7 +90,7 @@ See `time-tracking/references/category_guide.md` for the decision tree.
 ## Notes
 
 - Claude Code only — relies on filesystem + bash.
-- v1 supports one session at a time. No concurrent multi-project tracking.
-- No "resume" option — each `start` opens a fresh session (deliberate, for data clarity).
+- Multiple sessions can run at once (switch, pause+resume, or fully concurrent — chosen at runtime when `start` hits an open session).
 - Legacy verbose entries (pre-Skill) parsed compatibly. New entries write in slim format.
+- State file shape changed (`current_session` → `sessions[]`); old shape is auto-migrated on first read.
 - Restart Claude Code after install.

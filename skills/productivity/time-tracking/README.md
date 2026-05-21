@@ -11,7 +11,7 @@ Single slash command, sub-action by natural language:
 /time-tracking start
 /time-tracking end
 /time-tracking analyze this-week
-/time-tracking invoice acme-corp 2026-05
+/time-tracking invoice my-client-app 2026-05
 /time-tracking status
 ```
 
@@ -47,7 +47,7 @@ Restart Claude Code so the new skill is picked up.
 Only needed for invoicing:
 
 ```bash
-cp ~/.claude/skills/time-tracking/templates/billing_rates.md ~/.claude/billing_rates.md
+cp ~/.claude/skills/time-tracking/templates/billing_rates.example.md ~/.claude/billing_rates.md
 # Edit with your real clients and rates
 ```
 

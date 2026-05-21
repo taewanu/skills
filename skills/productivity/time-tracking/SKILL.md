@@ -37,12 +37,12 @@ If `/time-tracking` is invoked with no further input, default to `status`. After
 
 2. **Auto-detect project**:
    - Run `pwd`.
-   - Extract project name from last directory segment, Title Case it (`sounds-abroad` → "Sounds Abroad").
-   - If user passed a project name explicitly (e.g. "start working on Acme"), use that instead.
+   - Extract project name from last directory segment, Title Case it (`<project-slug>` → "<Project Name>").
+   - If user passed a project name explicitly, use that instead.
 
 3. **Resolve tracking file path**:
    - Default: `~/.claude/projects/<encoded-cwd>/memory/project_time_tracking.md`
-   - Encoding: `pwd` with `/` replaced by `-`, leading `-` kept. E.g. `/Users/wanu/projects/sounds-abroad` → `-Users-wanu-projects-sounds-abroad`.
+   - Encoding: `pwd` with `/` replaced by `-`, leading `-` kept. E.g. `/Users/me/projects/example-app` → `-Users-me-projects-example-app`.
    - If `memory/` dir doesn't exist, create it.
    - If tracking file doesn't exist, create it with the header from `templates/tracking_file_header.md`.
 
@@ -268,8 +268,8 @@ Unlike `end`, `discard` writes nothing to the tracking file — the session's ti
    Total: 18.5h across 7 sessions
 
    By project:
-     - Sounds Abroad: 14.2h (76.8%)
-     - Canada Job Tracker: 4.3h (23.2%)
+     - <Project A>: 14.2h (76.8%)
+     - <Project B>: 4.3h (23.2%)
 
    By category:
      - implementation: 7.4h (40%)
@@ -302,14 +302,14 @@ Unlike `end`, `discard` writes nothing to the tracking file — the session's ti
 
 7. **Output**:
    ```
-   Invoice draft — acme-corp — 2026-05-01..2026-05-31
+   Invoice draft — my-client-app — 2026-05-01..2026-05-31
    Rate: 80 USD/h
 
    Total: 23.45h × 80 USD/h = 1,876.00 USD
 
    Entries (5):
-     - 2026-05-03 (Sun) 10:00–14:30 ICT (4.50h) — Acme | landing page
-     - 2026-05-05 (Tue) 09:00–13:00 ICT (4.00h) — Acme | checkout flow
+     - 2026-05-03 (Sun) 10:00–14:30 ICT (4.50h) — MyClientApp | landing page
+     - 2026-05-05 (Tue) 09:00–13:00 ICT (4.00h) — MyClientApp | checkout flow
      ...
 
    Category breakdown:
@@ -375,7 +375,7 @@ Path: `~/.claude/time-tracking-state.json`
       "tz_full": "Asia/Bangkok",
       "location": "Bangkok",
       "tool": "Claude Code",
-      "tracking_file": "/Users/wanu/.claude/projects/.../memory/project_time_tracking.md",
+      "tracking_file": "/Users/me/.claude/projects/.../memory/project_time_tracking.md",
       "previous_slipped": "<one line, from last entry in tracking file>",
       "status": "active",
       "segments": [
@@ -402,13 +402,13 @@ The `sessions` list can hold multiple entries. Each session is independent — i
 
 Path: `~/.claude/billing_rates.md` (user-created; Skill reads only).
 
-Template: `templates/billing_rates.md`.
+Template: `templates/billing_rates.example.md`.
 
 ## Tracking file location
 
 Per-project: `~/.claude/projects/<encoded-cwd>/memory/project_time_tracking.md`.
 
-Encoding: replace `/` with `-` in absolute pwd. E.g. `/Users/wanu/projects/sounds-abroad` → `-Users-wanu-projects-sounds-abroad`.
+Encoding: replace `/` with `-` in absolute pwd. E.g. `/Users/me/projects/example-app` → `-Users-me-projects-example-app`.
 
 If a project's tracking file lives elsewhere (legacy or user preference), user can specify it when starting (e.g. "start, tracking file at <path>"). Override stored in state for the session.
 
@@ -423,7 +423,7 @@ When analyzing or invoicing, parse both formats from the same file:
   - cat: ...
 ```
 
-**Legacy verbose** (Sounds Abroad pre-Skill entries):
+**Legacy verbose** (pre-Skill entries):
 ```
 - Window: HH:MM–HH:MM <TZ> (~X.Xh)
 - Location: ...
@@ -447,11 +447,11 @@ Both legacy and slim entries can coexist in the same file. New entries always wr
 - **Don't fabricate numbers**. Category % must come from the user. Never guess silently.
 - **Don't overstate**. Confirmations are dry: `<HH:MM> <TZ>, <project> 시작.` not "🚀 시작합니다!"
 - **Show inferred values**. When auto-detecting project from cwd or splitting across date boundary, show the user what was inferred and let them override.
-- **Korean or English**: match the user's language for confirmations. Default Korean for Wanu.
+- **Korean or English**: match the user's language for confirmations.
 - **Never show fake slash commands**. The only real slash invocation is `/time-tracking`. Sub-actions (`start`, `end`, `pause`, `resume`, `switch`, `discard`, `status`, `analyze`, `invoice`) are natural-language words, not slash commands. Don't tell the user to type "/tt-start" or similar — those don't exist.
 - **One-line confirmations for state changes**. `pause`, `resume`, `discard`, `switch` write nothing to the tracking file (except `switch`'s draft entry). Confirmations stay to one line, matching the dryness of `start`/`end`: e.g. `<HH:MM> <TZ>, <project> 일시정지 (누적 Xh Ym).`
 - **Confirm before destructive action**. `discard` and the stale-session (c) "폐기" branch destroy time data permanently. Always show a `(y/N)` prompt with the time about to be lost — never act on first invocation.
-- **Don't hardcode project or client names in prompts**. Use `<project>`, `<client>`, `<HH:MM>` placeholders. The names get filled at runtime from state — putting a real name like "Sounds Abroad" or "Acme" into the spec's prompt text makes it read like it's wired for one user.
+- **Don't hardcode project or client names in prompts**. Use `<project>`, `<client>`, `<HH:MM>` placeholders. The names get filled at runtime from state — putting a literal name like "MyApp" or "MyClientApp" into the spec's prompt text makes it read like it's wired for one user.
 
 ## Edge cases
 

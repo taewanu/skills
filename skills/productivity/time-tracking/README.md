@@ -11,7 +11,7 @@ Single slash command, sub-action by natural language:
 /time-tracking start
 /time-tracking end
 /time-tracking analyze this-week
-/time-tracking invoice acme-corp 2026-05
+/time-tracking invoice my-client-app 2026-05
 /time-tracking status
 ```
 

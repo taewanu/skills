@@ -46,7 +46,7 @@ When classifying a chunk of session time:
 
 ## Worked examples
 
-### From Sounds Abroad history
+### From a real project's session log
 
 | Activity | Category | Why |
 |---|---|---|

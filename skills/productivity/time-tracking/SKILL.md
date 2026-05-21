@@ -37,12 +37,12 @@ If `/time-tracking` is invoked with no further input, default to `status`. After
 
 2. **Auto-detect project**:
    - Run `pwd`.
-   - Extract project name from last directory segment, Title Case it (`sounds-abroad` → "Sounds Abroad").
-   - If user passed a project name explicitly (e.g. "start working on Acme"), use that instead.
+   - Extract project name from last directory segment, Title Case it (`<project-slug>` → "<Project Name>").
+   - If user passed a project name explicitly, use that instead.
 
 3. **Resolve tracking file path**:
    - Default: `~/.claude/projects/<encoded-cwd>/memory/project_time_tracking.md`
-   - Encoding: `pwd` with `/` replaced by `-`, leading `-` kept. E.g. `/Users/wanu/projects/sounds-abroad` → `-Users-wanu-projects-sounds-abroad`.
+   - Encoding: `pwd` with `/` replaced by `-`, leading `-` kept. E.g. `/Users/me/projects/example-app` → `-Users-me-projects-example-app`.
    - If `memory/` dir doesn't exist, create it.
    - If tracking file doesn't exist, create it with the header from `templates/tracking_file_header.md`.
 
@@ -268,8 +268,8 @@ Unlike `end`, `discard` writes nothing to the tracking file — the session's ti
    Total: 18.5h across 7 sessions
 
    By project:
-     - Sounds Abroad: 14.2h (76.8%)
-     - Canada Job Tracker: 4.3h (23.2%)
+     - <Project A>: 14.2h (76.8%)
+     - <Project B>: 4.3h (23.2%)
 
    By category:
      - implementation: 7.4h (40%)
@@ -408,7 +408,7 @@ Template: `templates/billing_rates.md`.
 
 Per-project: `~/.claude/projects/<encoded-cwd>/memory/project_time_tracking.md`.
 
-Encoding: replace `/` with `-` in absolute pwd. E.g. `/Users/wanu/projects/sounds-abroad` → `-Users-wanu-projects-sounds-abroad`.
+Encoding: replace `/` with `-` in absolute pwd. E.g. `/Users/me/projects/example-app` → `-Users-me-projects-example-app`.
 
 If a project's tracking file lives elsewhere (legacy or user preference), user can specify it when starting (e.g. "start, tracking file at <path>"). Override stored in state for the session.
 
@@ -423,7 +423,7 @@ When analyzing or invoicing, parse both formats from the same file:
   - cat: ...
 ```
 
-**Legacy verbose** (Sounds Abroad pre-Skill entries):
+**Legacy verbose** (pre-Skill entries):
 ```
 - Window: HH:MM–HH:MM <TZ> (~X.Xh)
 - Location: ...

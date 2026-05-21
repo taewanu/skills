@@ -47,7 +47,7 @@ Restart Claude Code so the new skill is picked up.
 Only needed for invoicing:
 
 ```bash
-cp ~/.claude/skills/time-tracking/templates/billing_rates.md ~/.claude/billing_rates.md
+cp ~/.claude/skills/time-tracking/templates/billing_rates.example.md ~/.claude/billing_rates.md
 # Edit with your real clients and rates
 ```
 

@@ -402,7 +402,7 @@ The `sessions` list can hold multiple entries. Each session is independent — i
 
 Path: `~/.claude/billing_rates.md` (user-created; Skill reads only).
 
-Template: `templates/billing_rates.md`.
+Template: `templates/billing_rates.example.md`.
 
 ## Tracking file location
 

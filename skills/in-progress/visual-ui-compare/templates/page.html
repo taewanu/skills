@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<!--
+  visual-ui-compare page template.
+  Fill in three regions before opening:
+    1. <!-- TOKENS --> — paste the project's token block (both themes; derive the missing one if needed)
+    2. <title> and <h1> + <p> in <header class="page"> — name the comparison + variable
+    3. <!-- CELLS --> — one .variant block per cell; see the comment-stub at the bottom
+-->
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>__PROJECT__ — visual compare</title>
+    <style>
+      /* ===== TOKENS (paste from project; both themes) ===== */
+      <!-- TOKENS -->
+
+      /* Fallback structural tokens — override above if the project defines them */
+      :root {
+        --hairline: rgba(127, 127, 127, 0.12);
+        --hairline-strong: rgba(127, 127, 127, 0.22);
+        --row-divider: rgba(127, 127, 127, 0.08);
+
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-pill: 9999px;
+        --text-small: 13px;
+        --text-micro: 11px;
+        --text-h3: 18px;
+        --text-h1: 32px;
+      }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
+      html, body {
+        background: var(--color-void, #0a0a0a);
+        color: var(--color-fg-1, #f5f5f5);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        font-size: var(--text-body, 15px);
+        line-height: 1.5;
+        transition: background 160ms ease, color 160ms ease;
+      }
+
+      /* ===== Toolbar ===== */
+      .toolbar {
+        position: fixed; top: 12px; right: 12px;
+        display: flex; gap: 6px; padding: 6px;
+        background: var(--color-night, var(--color-void));
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius-pill);
+        z-index: 100;
+        font-family: ui-monospace, "SF Mono", monospace;
+        backdrop-filter: blur(12px);
+      }
+      .toolbar-group {
+        display: flex; gap: 2px; padding: 2px;
+        background: var(--color-void);
+        border-radius: var(--radius-pill);
+      }
+      .toolbar button {
+        all: unset; cursor: pointer;
+        padding: 6px 12px; border-radius: var(--radius-pill);
+        color: var(--color-fg-3); font-size: var(--text-micro);
+        font-family: inherit; line-height: 1;
+        transition: background 120ms ease, color 120ms ease;
+      }
+      .toolbar button:hover { color: var(--color-fg-1); }
+      .toolbar button.active {
+        background: var(--color-atmos, var(--hairline-strong));
+        color: var(--color-fg-1);
+      }
+
+      /* ===== Page header ===== */
+      header.page { padding: 56px 24px 16px; }
+      header.page h1 {
+        font-size: var(--text-h1);
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+      header.page p {
+        color: var(--color-fg-3);
+        font-size: var(--text-small);
+        margin-top: 4px;
+        font-family: ui-monospace, "SF Mono", monospace;
+      }
+
+      /* ===== Viewport frame ===== */
+      .viewport-frame {
+        margin: 0 auto;
+        padding: 0 24px 64px;
+        transition: max-width 200ms ease;
+      }
+      .viewport-frame[data-vp="375"] { max-width: 375px; }
+      .viewport-frame[data-vp="768"] { max-width: 768px; }
+      .viewport-frame[data-vp="full"] { max-width: none; }
+      .viewport-frame[data-vp="375"],
+      .viewport-frame[data-vp="768"] {
+        outline: 1px dashed var(--hairline-strong);
+        outline-offset: 8px;
+      }
+
+      /* ===== Section + grid ===== */
+      .section {
+        padding-top: 24px;
+        border-top: 1px solid var(--hairline);
+      }
+      .section-title { font-size: var(--text-h3); font-weight: 600; }
+      .section-hint {
+        color: var(--color-fg-3);
+        font-size: var(--text-small);
+        margin: 4px 0 20px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(var(--cells, 3), 1fr);
+        gap: 16px;
+      }
+      .viewport-frame[data-vp="375"] .grid,
+      .viewport-frame[data-vp="768"] .grid {
+        grid-template-columns: 1fr;
+      }
+
+      /* ===== Cell ===== */
+      .variant {
+        position: relative;
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius-md);
+        background: var(--color-night, var(--color-void));
+        padding: 16px;
+      }
+      .variant-header {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 8px; margin-bottom: 12px;
+      }
+      .variant-label {
+        color: var(--color-fg-3);
+        font-size: var(--text-small);
+        font-family: ui-monospace, "SF Mono", monospace;
+      }
+      .variant-label .current { color: var(--color-sunrise, #ff6b47); }
+      .variant-tradeoff {
+        color: var(--color-fg-3);
+        font-size: var(--text-micro);
+        font-family: ui-monospace, "SF Mono", monospace;
+        margin-bottom: 12px;
+        margin-top: -4px;
+      }
+
+      .pick-btn {
+        all: unset; cursor: pointer;
+        padding: 4px 10px; border-radius: var(--radius-pill);
+        background: var(--color-void);
+        border: 1px solid var(--hairline-strong);
+        color: var(--color-fg-2);
+        font-size: var(--text-micro);
+        font-family: ui-monospace, "SF Mono", monospace;
+        line-height: 1;
+        transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+      }
+      .pick-btn:hover {
+        color: var(--color-fg-1);
+        border-color: var(--color-fg-3);
+      }
+      .pick-btn.copied {
+        background: var(--color-aurora, #6be5c5);
+        color: #0a0a0a;
+        border-color: var(--color-aurora, #6be5c5);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="toolbar">
+      <div class="toolbar-group" role="group" aria-label="Theme">
+        <button type="button" data-theme-set="light">☀ Light</button>
+        <button type="button" data-theme-set="dark">🌙 Dark</button>
+      </div>
+      <div class="toolbar-group" role="group" aria-label="Viewport">
+        <button type="button" data-vp-set="375">375</button>
+        <button type="button" data-vp-set="768">768</button>
+        <button type="button" data-vp-set="full">Full</button>
+      </div>
+    </div>
+
+    <header class="page">
+      <h1>__TITLE__</h1>
+      <p>__SUBTITLE__</p>
+    </header>
+
+    <div class="viewport-frame" data-vp="full">
+      <section class="section">
+        <div class="grid" style="--cells: 3">
+          <!-- CELLS -->
+          <!--
+            Cell stub — copy once per variant:
+
+            <div class="variant">
+              <div class="variant-header">
+                <span class="variant-label">A — --token-name (value) <span class="current">— current</span></span>
+                <button type="button" class="pick-btn"
+                        data-pick="A — --token-name (value) [current]">Pick this</button>
+              </div>
+              <!-- optional, only when non-obvious:
+              <div class="variant-tradeoff">trade-off note (e.g. bigger touch target, eats 8px vertical)</div>
+              -->
+
+              <!-- actual content under test — same across all cells, only the variable differs -->
+            </div>
+          -->
+        </div>
+      </section>
+    </div>
+
+    <script>
+      (function () {
+        const root = document.documentElement;
+        const frame = document.querySelector(".viewport-frame");
+        const THEME_KEY = "visual-ui-compare-theme";
+        const VP_KEY = "visual-ui-compare-viewport";
+
+        function applyTheme(t) {
+          root.dataset.theme = t;
+          document.querySelectorAll("[data-theme-set]").forEach((b) =>
+            b.classList.toggle("active", b.dataset.themeSet === t),
+          );
+        }
+        function applyVp(v) {
+          frame.dataset.vp = v;
+          document.querySelectorAll("[data-vp-set]").forEach((b) =>
+            b.classList.toggle("active", b.dataset.vpSet === v),
+          );
+        }
+
+        applyTheme(localStorage.getItem(THEME_KEY) || "dark");
+        applyVp(localStorage.getItem(VP_KEY) || "full");
+
+        document.querySelectorAll("[data-theme-set]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            applyTheme(btn.dataset.themeSet);
+            localStorage.setItem(THEME_KEY, btn.dataset.themeSet);
+          });
+        });
+        document.querySelectorAll("[data-vp-set]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            applyVp(btn.dataset.vpSet);
+            localStorage.setItem(VP_KEY, btn.dataset.vpSet);
+          });
+        });
+
+        document.querySelectorAll(".pick-btn").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            const text = `pick: ${btn.dataset.pick}`;
+            try {
+              await navigator.clipboard.writeText(text);
+            } catch (e) {
+              const ta = document.createElement("textarea");
+              ta.value = text;
+              document.body.appendChild(ta);
+              ta.select();
+              document.execCommand("copy");
+              document.body.removeChild(ta);
+            }
+            const original = btn.textContent;
+            btn.textContent = "✓ Copied";
+            btn.classList.add("copied");
+            setTimeout(() => {
+              btn.textContent = original;
+              btn.classList.remove("copied");
+            }, 1200);
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>

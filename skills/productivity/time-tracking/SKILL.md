@@ -448,7 +448,7 @@ Both legacy and slim entries can coexist in the same file. New entries always wr
 - **Don't overstate**. Confirmations are dry: `<HH:MM> <TZ>, <project> 시작.` not "🚀 시작합니다!"
 - **Show inferred values**. When auto-detecting project from cwd or splitting across date boundary, show the user what was inferred and let them override.
 - **Korean or English**: match the user's language for confirmations.
-- **Never show fake slash commands**. The only real slash invocation is `/time-tracking`. Sub-actions (`start`, `end`, `pause`, `resume`, `switch`, `discard`, `status`, `analyze`, `invoice`) are natural-language words, not slash commands. Don't tell the user to type "/tt-start" or similar — those don't exist.
+- **Never show fake slash commands**. The only real slash invocation is `/time-tracking`. Sub-actions (`start`, `end`, `pause`, `resume`, `switch`, `discard`, `status`, `analyze`, `invoice`) are natural-language words, not slash commands — don't invent `/start`, `/end`, etc.
 - **One-line confirmations for state changes**. `pause`, `resume`, `discard`, `switch` write nothing to the tracking file (except `switch`'s draft entry). Confirmations stay to one line, matching the dryness of `start`/`end`: e.g. `<HH:MM> <TZ>, <project> 일시정지 (누적 Xh Ym).`
 - **Confirm before destructive action**. `discard` and the stale-session (c) "폐기" branch destroy time data permanently. Always show a `(y/N)` prompt with the time about to be lost — never act on first invocation.
 - **Don't hardcode project or client names in prompts**. Use `<project>`, `<client>`, `<HH:MM>` placeholders. The names get filled at runtime from state — putting a literal name like "MyApp" or "MyClientApp" into the spec's prompt text makes it read like it's wired for one user.

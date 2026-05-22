@@ -1,5 +1,7 @@
 # Skills
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Personal Claude Code skills I use for freelance and product engineering work.
 
 ## Engineering

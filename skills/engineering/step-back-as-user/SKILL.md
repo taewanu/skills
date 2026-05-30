@@ -24,9 +24,9 @@ One concrete user at a time. If the user is already obvious from context, skip n
 
 ## Reference mode
 
-Name the moment narrowly first — sign-in, empty state, multi-select, undo, onboarding step 2 — not the whole product. Then pull up 2–3 products that actually face the *same* moment (not the most famous; the most structurally similar) and walk through how each one handles it.
+Name the moment narrowly first — sign-in, empty state, multi-select, undo, permission prompt copy, onboarding step 2 — not the whole product. Then pull up 2–3 products that actually face the *same* moment (not the most famous; the most structurally similar) and walk through how each one handles it.
 
-For each: what's on the screen, what the user does, and the tradeoff that choice took — "Linear makes the empty state a single-CTA invitation; gives up discoverability of secondary actions." Then say which one fits the current context, and why.
+For each: what's on the screen, what the user does, and the tradeoff that choice took. E.g. on empty state — Linear: single CTA ("Create your first issue"), one click, trades discoverability for focus. Notion: row of template chips, picks a template type, trades focus for discoverability. Then say which one fits the current context, and why.
 
 If you can't find 2–3 real peers, say so. "No one solves this the same way" is information, not a gap to fill with name-drops. Don't pad with products that share a category but not the moment.
 

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<!--
+  visual-code-review page template. One self-contained file; both modes fill it.
+  Fill these regions before opening:
+    1. <title>, [data-title], [data-summary], [data-context] in <header class="page">
+    2. <nav class="nav"> — one <a> per file (review) or per section (explain)
+    3. <!-- CONTENT --> — diff .file blocks with anchored .note callouts (review),
+       or .section blocks with a diagram + annotated .snippet (explain)
+    4. <!-- DIAGRAM --> — inline SVG/HTML flow, when a picture beats prose
+    5. <!-- GOTCHAS --> — gotchas / open questions
+  See the commented authoring stub at the bottom for the exact shapes to copy.
+  Mechanics (theme toggle, wrap toggle, copy-back JS) are solved — copy verbatim.
+-->
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>__TITLE__ — visual code review</title>
+    <style>
+      :root,
+      [data-theme="dark"] {
+        --bg: #0d1117;
+        --bg-elev: #161b22;
+        --fg: #e6edf3;
+        --fg-muted: #8b949e;
+        --border: #30363d;
+        --accent: #58a6ff;
+        --add-bg: rgba(46, 160, 67, 0.18);
+        --del-bg: rgba(248, 81, 73, 0.16);
+        --ln-fg: #6e7681;
+        --info: #58a6ff;
+        --watch: #d29922;
+        --risk: #f85149;
+        --question: #bc8cff;
+      }
+      [data-theme="light"] {
+        --bg: #ffffff;
+        --bg-elev: #f6f8fa;
+        --fg: #1f2328;
+        --fg-muted: #656d76;
+        --border: #d1d9e0;
+        --accent: #0969da;
+        --add-bg: #e6ffec;
+        --del-bg: #ffebe9;
+        --ln-fg: #8c959f;
+        --info: #0969da;
+        --watch: #9a6700;
+        --risk: #cf222e;
+        --question: #8250df;
+      }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
+      html, body {
+        background: var(--bg);
+        color: var(--fg);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        font-size: 15px;
+        line-height: 1.55;
+        transition: background 160ms ease, color 160ms ease;
+      }
+      code, .mono, .code, .hunk-head, .ln { font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace; }
+      a { color: var(--accent); text-decoration: none; }
+
+      /* ===== Toolbar ===== */
+      .toolbar {
+        position: fixed; top: 12px; right: 12px;
+        display: flex; gap: 6px; padding: 6px;
+        background: var(--bg-elev);
+        border: 1px solid var(--border);
+        border-radius: 9999px;
+        z-index: 100;
+        font-family: ui-monospace, monospace;
+        backdrop-filter: blur(12px);
+      }
+      .toolbar-group { display: flex; gap: 2px; padding: 2px; background: var(--bg); border-radius: 9999px; }
+      .toolbar button {
+        all: unset; cursor: pointer;
+        padding: 6px 12px; border-radius: 9999px;
+        color: var(--fg-muted); font-size: 11px; line-height: 1;
+        transition: background 120ms ease, color 120ms ease;
+      }
+      .toolbar button:hover { color: var(--fg); }
+      .toolbar button.active { background: var(--border); color: var(--fg); }
+
+      /* ===== Header ===== */
+      header.page { padding: 56px 24px 20px; max-width: 1100px; margin: 0 auto; }
+      header.page h1 { font-size: 28px; font-weight: 600; letter-spacing: -0.01em; }
+      header.page .summary { color: var(--fg); font-size: 16px; margin-top: 8px; max-width: 70ch; }
+      header.page .context { color: var(--fg-muted); font-size: 13px; margin-top: 6px; font-family: ui-monospace, monospace; }
+      .header-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+
+      .btn {
+        all: unset; cursor: pointer;
+        padding: 6px 12px; border-radius: 8px;
+        background: var(--bg-elev); border: 1px solid var(--border);
+        color: var(--fg); font-size: 12px; line-height: 1;
+        font-family: ui-monospace, monospace;
+        transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+      }
+      .btn:hover { border-color: var(--accent); color: var(--accent); }
+      .btn.copied { background: var(--info); border-color: var(--info); color: var(--bg); }
+
+      /* ===== Layout: sticky nav + main ===== */
+      .layout { display: grid; grid-template-columns: 200px 1fr; gap: 24px; max-width: 1100px; margin: 0 auto; padding: 0 24px 80px; }
+      .nav { position: sticky; top: 24px; align-self: start; display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+      .nav a { padding: 4px 8px; border-radius: 6px; color: var(--fg-muted); font-family: ui-monospace, monospace; }
+      .nav a:hover { background: var(--bg-elev); color: var(--fg); }
+      .main { min-width: 0; display: flex; flex-direction: column; gap: 28px; }
+      @media (max-width: 760px) { .layout { grid-template-columns: 1fr; } .nav { position: static; flex-direction: row; flex-wrap: wrap; } }
+
+      /* ===== File / section block ===== */
+      .file, .section { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--bg-elev); }
+      .file-head, .section-head {
+        display: flex; align-items: center; justify-content: space-between; gap: 8px;
+        padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--bg);
+      }
+      .file-head .path { font-family: ui-monospace, monospace; font-size: 13px; }
+      .file-head .meta { font-size: 12px; color: var(--fg-muted); font-family: ui-monospace, monospace; }
+      .section-head h2 { font-size: 15px; font-weight: 600; }
+      .block-body { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+
+      /* ===== Diff ===== */
+      .hunk { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+      .hunk-head { padding: 4px 12px; color: var(--fg-muted); font-size: 12px; background: var(--bg); border-bottom: 1px solid var(--border); }
+      .lines { overflow-x: auto; }
+      .line { display: grid; grid-template-columns: 48px 1fr; font-size: 12.5px; }
+      .line .ln { text-align: right; padding: 0 10px; color: var(--ln-fg); user-select: none; border-right: 1px solid var(--border); }
+      .line .code { padding: 0 12px; white-space: pre; }
+      body.wrap .line .code { white-space: pre-wrap; word-break: break-word; }
+      .line.add { background: var(--add-bg); }
+      .line.del { background: var(--del-bg); }
+
+      /* ===== Annotation note (anchored under the hunk it's about) ===== */
+      .note {
+        border-left: 3px solid var(--info);
+        background: var(--bg);
+        border-radius: 0 8px 8px 0;
+        padding: 8px 12px; font-size: 13.5px; cursor: pointer;
+        transition: outline-color 150ms ease;
+        outline: 1px solid transparent;
+      }
+      .note:hover { outline-color: var(--border); }
+      .note.flash { outline-color: var(--accent); }
+      .note::before { font-weight: 600; margin-right: 6px; }
+      .note.info { border-left-color: var(--info); }
+      .note.info::before { content: "ℹ"; color: var(--info); }
+      .note.watch { border-left-color: var(--watch); }
+      .note.watch::before { content: "⚠"; color: var(--watch); }
+      .note.risk { border-left-color: var(--risk); }
+      .note.risk::before { content: "✕"; color: var(--risk); }
+      .note.question { border-left-color: var(--question); }
+      .note.question::before { content: "?"; color: var(--question); }
+      .note .ref { font-family: ui-monospace, monospace; color: var(--fg-muted); font-size: 12px; }
+
+      /* ===== Annotated snippet (explain mode) ===== */
+      .snippet { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+      .snippet pre { padding: 12px; overflow-x: auto; font-size: 12.5px; }
+      body.wrap .snippet pre { white-space: pre-wrap; word-break: break-word; }
+      .prose { font-size: 14.5px; max-width: 72ch; }
+      .prose p + p { margin-top: 10px; }
+
+      /* ===== Diagram + gotchas ===== */
+      .diagram { display: flex; justify-content: center; padding: 8px; }
+      .diagram svg { max-width: 100%; height: auto; }
+      .gotchas { border: 1px dashed var(--border); border-radius: 10px; padding: 16px; }
+      .gotchas h2 { font-size: 15px; margin-bottom: 10px; }
+      .skipped { color: var(--fg-muted); font-size: 13px; font-style: italic; }
+    </style>
+  </head>
+  <body>
+    <div class="toolbar">
+      <div class="toolbar-group" role="group" aria-label="Theme">
+        <button type="button" data-theme-set="light">☀ Light</button>
+        <button type="button" data-theme-set="dark">🌙 Dark</button>
+      </div>
+      <div class="toolbar-group" role="group" aria-label="Wrap">
+        <button type="button" data-wrap-set="off">No-wrap</button>
+        <button type="button" data-wrap-set="on">Wrap</button>
+      </div>
+    </div>
+
+    <header class="page">
+      <h1 data-title>__TITLE__</h1>
+      <p class="summary" data-summary>__ONE-LINE SUMMARY OF THE CHANGE / SUBJECT__</p>
+      <p class="context" data-context>__branch · PR #__ · base...head — or the subsystem name__</p>
+      <div class="header-actions">
+        <button type="button" class="btn" id="copy-review">Copy notes as markdown</button>
+        <button type="button" class="btn" id="copy-summary">Copy summary</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <nav class="nav">
+        <!-- one <a href="#id"> per file (review) or section (explain) -->
+        <!-- <a href="#f-parser">parser.ts</a> -->
+      </nav>
+
+      <main class="main">
+        <!-- CONTENT -->
+
+        <!-- DIAGRAM (optional; drop a .section with an inline <svg> when a flow helps) -->
+
+        <!-- GOTCHAS -->
+        <!--
+        <section class="gotchas">
+          <h2>Gotchas & open questions</h2>
+          <div class="block-body" style="padding:0">
+            <div class="note question" data-annot data-group="General">Does the retry path double-count metrics? Couldn't tell from the diff.</div>
+          </div>
+          <p class="skipped">Skipped: generated/lockfiles, *.snap — not reviewed.</p>
+        </section>
+        -->
+      </main>
+    </div>
+
+    <!--
+      ============================ AUTHORING STUBS ============================
+      Copy these shapes into the regions above. Delete what you don't use.
+      NOTE: code/diff text is literal — HTML-escape it: < → &lt;, > → &gt;, & → &amp;.
+
+      REVIEW MODE — a file with one hunk and two anchored notes:
+
+      <section class="file" id="f-parser">
+        <div class="file-head">
+          <span class="path">src/parser.ts</span>
+          <span class="meta">+18 −4</span>
+        </div>
+        <div class="block-body">
+          <div class="hunk">
+            <div class="hunk-head">@@ -40,7 +40,9 @@ function parse(input)</div>
+            <div class="lines">
+              <div class="line ctx"><span class="ln">40</span><span class="code">  const tokens = lex(input);</span></div>
+              <div class="line del"><span class="ln">41</span><span class="code">-  return tokens.map(build);</span></div>
+              <div class="line add"><span class="ln">41</span><span class="code">+  if (!tokens.length) return [];</span></div>
+              <div class="line add"><span class="ln">42</span><span class="code">+  return tokens.map(build);</span></div>
+            </div>
+          </div>
+          one note per concern, anchored right under the hunk it's about.
+          kind = info | watch | risk | question. data-group = the heading it's filed under
+          in the copied markdown (the file path in review mode; a section/concept in explain).
+          write the line ref inline (it travels into the copied markdown):
+          <div class="note watch" data-annot data-group="src/parser.ts">
+            <span class="ref">L41</span> — early-return on empty is good, but callers in renderer.ts assume a non-empty array. Worth checking.
+          </div>
+          <div class="note question" data-annot data-group="src/parser.ts">
+            <span class="ref">L41</span> — is empty input actually reachable, or guarded upstream?
+          </div>
+        </div>
+      </section>
+
+      EXPLAIN MODE — a section with prose, a diagram, and an annotated snippet:
+
+      <section class="section" id="s-flow">
+        <div class="section-head"><h2>Token bucket flow</h2></div>
+        <div class="block-body">
+          <div class="prose"><p>Each request takes a token; the refiller tops up on an interval...</p></div>
+          <div class="diagram">
+            <svg viewBox="0 0 360 90" role="img" aria-label="bucket flow">
+              <rect x="8" y="30" width="90" height="30" rx="6" fill="none" stroke="currentColor"/>
+              <text x="53" y="50" text-anchor="middle" font-size="12" fill="currentColor">request</text>
+              <line x1="98" y1="45" x2="140" y2="45" stroke="currentColor" marker-end="url(#a)"/>
+              <rect x="140" y="30" width="90" height="30" rx="6" fill="none" stroke="currentColor"/>
+              <text x="185" y="50" text-anchor="middle" font-size="12" fill="currentColor">take()</text>
+              <defs><marker id="a" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="currentColor"/></marker></defs>
+            </svg>
+          </div>
+          <div class="snippet"><pre><code>function take() {
+  if (this.tokens &lt; 1) return false; // &lt;-- the backpressure point
+  this.tokens -= 1; return true;
+}</code></pre></div>
+          <div class="note watch" data-annot data-group="src/bucket.ts">
+            <span class="ref">take()</span> — returns false rather than throwing; callers must check the return, not try/catch.
+          </div>
+        </div>
+      </section>
+      =========================================================================
+    -->
+
+    <script>
+      (function () {
+        const root = document.documentElement;
+        const $ = (s) => document.querySelector(s);
+        const $$ = (s) => [...document.querySelectorAll(s)];
+        const THEME_KEY = "visual-code-review-theme";
+        const WRAP_KEY = "visual-code-review-wrap";
+        const KIND_ICON = { info: "ℹ️", watch: "⚠️", risk: "🛑", question: "❓" };
+
+        function applyTheme(t) {
+          root.dataset.theme = t;
+          $$("[data-theme-set]").forEach((b) => b.classList.toggle("active", b.dataset.themeSet === t));
+        }
+        function applyWrap(w) {
+          document.body.classList.toggle("wrap", w === "on");
+          $$("[data-wrap-set]").forEach((b) => b.classList.toggle("active", b.dataset.wrapSet === w));
+        }
+        applyTheme(localStorage.getItem(THEME_KEY) || "dark");
+        applyWrap(localStorage.getItem(WRAP_KEY) || "off");
+        $$("[data-theme-set]").forEach((b) => b.addEventListener("click", () => { applyTheme(b.dataset.themeSet); localStorage.setItem(THEME_KEY, b.dataset.themeSet); }));
+        $$("[data-wrap-set]").forEach((b) => b.addEventListener("click", () => { applyWrap(b.dataset.wrapSet); localStorage.setItem(WRAP_KEY, b.dataset.wrapSet); }));
+
+        async function copyText(text, btn) {
+          try { await navigator.clipboard.writeText(text); }
+          catch (e) {
+            const ta = document.createElement("textarea");
+            ta.value = text; document.body.appendChild(ta); ta.select();
+            document.execCommand("copy"); ta.remove();
+          }
+          if (btn) {
+            const o = btn.textContent;
+            btn.textContent = "✓ Copied"; btn.classList.add("copied");
+            setTimeout(() => { btn.textContent = o; btn.classList.remove("copied"); }, 1200);
+          }
+        }
+
+        const noteKind = (n) => ["risk", "watch", "question", "info"].find((k) => n.classList.contains(k)) || "info";
+        const noteText = (n) => n.textContent.replace(/\s+/g, " ").trim();
+
+        const clean = (s, fallback) => { s = (s || "").trim(); return !s || s.startsWith("__") ? fallback : s; };
+
+        function buildReviewComment() {
+          const title = clean($("[data-title]")?.textContent, "Code review");
+          const summary = clean($("[data-summary]")?.textContent, "");
+          let md = `### ${title}\n`;
+          if (summary) md += `\n${summary}\n`;
+          const groups = new Map();
+          $$(".note[data-annot]").forEach((n) => {
+            const f = n.dataset.group || "General";
+            if (!groups.has(f)) groups.set(f, []);
+            groups.get(f).push(n);
+          });
+          groups.forEach((ns, file) => {
+            md += `\n**${file}**\n`;
+            ns.forEach((n) => { md += `- ${KIND_ICON[noteKind(n)]} ${noteText(n)}\n`; });
+          });
+          return md.trim();
+        }
+
+        $("#copy-review")?.addEventListener("click", (e) => copyText(buildReviewComment(), e.currentTarget));
+        $("#copy-summary")?.addEventListener("click", (e) => copyText(clean($("[data-summary]")?.textContent, ""), e.currentTarget));
+
+        $$(".note[data-annot]").forEach((n) => {
+          n.title = "click to copy this note";
+          n.addEventListener("click", () => {
+            copyText(`${KIND_ICON[noteKind(n)]} ${noteText(n)}`, null);
+            n.classList.add("flash");
+            setTimeout(() => n.classList.remove("flash"), 600);
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>

@@ -1,13 +1,13 @@
 ---
 name: visual-ui-compare
-description: Generate a single self-contained HTML page that puts UI/UX variants side-by-side with identical content and background, open it in the browser, and let the user pick by eye. Use whenever the user wants to compare visual variants — "비교해서 보여줘", "어떤 게 나아?", "A/B 보고 싶어", "html로 만들어 봐", "직접 보고 결정할게", "UI 결정 피로도", "compare visually", "show me side by side", "which one looks better?", "A/B these" — or any time you're about to use AskUserQuestion with 2+ options for a visual property. This covers both single-axis sweeps (color, size, spacing, shadow, radius, opacity, border) AND discrete style/treatment variants (badge styles, button treatments, card layouts) — both count as one decision. When in doubt, build the page; word-based judgment of visual variants is unreliable.
+description: Generate a single self-contained HTML page for making a visual decision by eye, open it in the browser, and let the user pick. Usually a grid of variants side-by-side with identical content and background (color, size, spacing, shadow, radius, opacity, border, and discrete style/treatment variants like badge styles, button treatments, card layouts) — or, when the choice is motion or a continuous range the user wants to scrub and feel (animation, easing, duration, transitions), a single live preview with sliders/knobs to tune instead. Use whenever the user wants to compare or tune a visual choice — "비교해서 보여줘", "어떤 게 나아?", "A/B 보고 싶어", "html로 만들어 봐", "직접 보고 결정할게", "UI 결정 피로도", "easing 비교", "이 애니메이션 느낌 좀 보자", "transition 속도 조절", "live preview로 보여줘", "compare visually", "show me side by side", "which one looks better?", "A/B these", "tune this animation", "slider for this" — or any time you're about to use AskUserQuestion with 2+ options for a visual property. When in doubt, build the page; word-based judgment of visual variants is unreliable.
 ---
 
 # Visual UI Compare
 
-Build a single self-contained HTML page that places UI/UX variants side-by-side with identical content + background, open it in the browser, let the user decide visually, then patch the chosen variant into the codebase.
+Build a single self-contained HTML page that makes a visual decision concrete — discrete variants side-by-side, or a live preview the user can tune — open it in the browser, let the user decide by eye, then patch the result into the codebase.
 
-The reason this skill exists: text linearizes information. A side-by-side renders the shape of the decision, so the user can react to variants rather than imagine them. A 30-second look ends what would otherwise be five rounds of "actually maybe smaller."
+The reason this skill exists: text linearizes information. Rendering the choice lets the user react to it rather than imagine it. A 30-second look ends what would otherwise be five rounds of "actually maybe smaller." And some variables — motion, a continuous range — can't be frozen into a static cell at all; for those you hand over the knobs and let the user feel the range.
 
 ## When to use
 
@@ -18,13 +18,17 @@ The reason this skill exists: text linearizes information. A side-by-side render
 
 - The user already picked — just implement.
 - The choice is non-visual (logic, copy, naming, tech stack) — AskUserQuestion is fine.
-- Motion / easing curves. Static side-by-side doesn't capture motion. Build a focused interactive prototype, or describe in words.
+- Real cross-browser / device rendering differences — the page previews one engine on your machine. For actual Safari-vs-Chrome or real-device behavior, test there. (Motion and continuous ranges are **not** a skip — that's what the tuner is for; see below.)
 
 ## Steps
 
 ### 1. Identify the variable under test
 
 The user named it ("rank size 3개", "shadow 2가지") or you can infer it from the active task. Ask only if genuinely ambiguous: *"어떤 variant 비교할까? 값들 넘겨주거나 설명해줘."* — and only once.
+
+Then read the **shape** of the decision. A discrete pick — a handful of specific options (these 3 shadows, these 2 badge styles) — is a **grid**: continue with the steps below. A continuous or motion choice — finding the right duration / easing / size by adjusting until it feels right — isn't a grid of frozen snapshots; it's a **tuner** (one live preview + controls + an export): jump to *Tuning continuous & motion variables* (it reuses the token, open, and cleanup steps but builds one tuned preview instead of a grid).
+
+When the shape is obvious, just build it — don't ask. When it's a judgment call — or when the user asked for a plain side-by-side but a tuner would clearly serve the decision better — **put it on the menu in one line** and let them choose: *"옆으로 깔아서 비교할 수도 있고, 슬라이더 달아서 직접 만져보게 할 수도 있어 — 뭐가 나아?"* The tuner is a capability they may not think to ask for, so surface it rather than silently committing to a format they didn't expect.
 
 If the user wants to compare two variables at once (e.g. "size × shadow as a matrix"), push back once with a sentence like *"두 변수 같이 비교하면 어느 쪽 효과인지 안 보여. padding 먼저 정하고 opacity 갈게 — 괜찮지?"* If they insist, build the matrix but warn that the signal is weaker and offer to re-run single-axis after.
 
@@ -70,7 +74,7 @@ Rules for the cells:
 Each cell (per the template's stub):
 
 - Label the variant by **token name** + value: `B — --shadow-sheet`. Append `(current)` to whichever is shipping. If the variant has no matching token (user supplied raw `15px`), label it `B — 15px (no token)` — don't invent a token name. After the user picks, ask whether to add a real token or use the raw value inline.
-- The Pick-this button's `data-pick` attribute is what gets copied to clipboard — match it to the label.
+- The Pick-this button's `data-pick` attribute is what gets copied — match it to the label. On click the page appends the live `theme=… vp=…`, so the paste-back tells you exactly which context the user judged in (a pick can be right in dark/Full and wrong in light/375).
 - *Optional* `.variant-tradeoff` line, only when the variants have non-obvious implications: `bigger touch target, eats 8px vertical`. Skip it for purely-aesthetic choices; the visual *is* the argument.
 
 If the user supplies 6+ variants, ask which ones to drop before building — too many cells means each one shrinks and the comparison loses signal.
@@ -98,16 +102,40 @@ If the open command fails (headless server, SSH session, missing `xdg-open`), do
 
 ### 6. Wait for the user's decision in chat
 
-Don't poll the file. Say something like *"비교 페이지 떴어. Pick this 누르면 클립보드에 복사되니까 그거 붙여줘. 아니면 그냥 말로 알려줘도 돼."* and stop.
+Don't poll the file. Say something like *"비교 페이지 떴어. Pick this 누르면 클립보드에 복사되니까 그거 붙여줘. 아니면 그냥 말로 알려줘도 돼."* and stop. What you'll get back is `pick: <label> @ theme=… vp=…` — the chosen variant plus the context they judged it in.
 
 ### 7. After the user picks: patch source + clean up
 
 - Apply the chosen variant to the actual project files (edit tokens, component CSS, whatever the cell represented).
 - Delete the comparison HTML. Keep it only if the user explicitly asks (`그대로 둬`, `--keep`).
 
+## Tuning continuous & motion variables
+
+A continuous or motion choice can't be frozen into a grid of cells — there's no discrete set to lay out, just a range to feel. So build a **tuner** instead: one live preview, a panel of controls wired to CSS variables, and a copy-back of the chosen values. (This is just the general HTML pattern — interactive controls when text can't express the choice, always ending in an export — pointed at a UI decision. Reach for it when the variable calls for it; it isn't a separate product.)
+
+**Start from `templates/interactive.html`.** Copy the mechanics verbatim — control→CSS-variable wiring, `localStorage` persistence, play/replay (re-triggers the animation with a reflow), and the "Copy these values" JS. Those are solved; what you decide is the chrome and *which* controls to expose.
+
+Collect tokens the same way as the grid (*Collect tokens from the current project*) — the preview should use the project's real colors/easings, and copy **both** themes since the theme toggle ships here too. Save to `/tmp/<project-slug>-visual-ui-compare-interactive.html` and open it with the same commands (*Open in the browser*).
+
+The template ships a working **example** (a pop animation tuned by duration / easing / scale) so the wiring is visible — replace it with the real element, and keep only the controls the decision actually needs (asked for duration + easing? delete the scale control too). Fill the regions:
+
+1. **Preview** — the element under test (button, card, sheet), inside `#preview`, driven by the CSS variables the controls set. Real content, project tokens. Declare each tunable variable's default on `#preview`.
+2. **Controls** — one per variable. Each carries `data-var="--your-css-var"`, plus `data-unit="ms"`/`"px"` on numeric sliders (omit on selects — a unit appended to a `cubic-bezier(...)` string corrupts it), and a sibling `<span data-readout="--your-css-var">` for the live value. The JS keys entirely off these three attributes. Use a range slider for numerics (duration, size, radius, blur, opacity) and a select for discrete presets (easing functions).
+3. **Trigger** — Play / Replay re-runs the motion by toggling `.run` on `#preview` and letting a `@keyframes` animation restart. So author the motion as a `.run`-gated keyframe animation that *consumes* your variables — not a bare `transition`, or Play won't replay.
+
+**Three things move together for each variable** — the control (`data-var`), the variable's default on `#preview`, and the keyframe/style that consumes it. Add or drop all three together: a control with no consumer does nothing, and a consumer with no control silently falls back to its default.
+
+Tuner discipline:
+
+- **Mark the starting point.** Pre-set controls to the current shipping values and label that baseline. Without an anchor, "is this better?" has nothing to be better *than*.
+- **One concept at a time, still.** A duration slider + an easing select describe one motion — fine. A dozen unrelated knobs is a control panel, not a decision. Expose only the variables the choice actually turns on.
+- **The live value is the label.** Show each control's current value, and make "Copy these values" emit the full set as `--var: value;` pairs (with the theme/viewport it was tuned in) so you can read the result off and patch tokens/CSS.
+
+When the user is done, they hit **Copy these values** and paste back — or just say what felt right. Then patch the tokens/CSS and delete the page, the same as the grid (*After the user picks*).
+
 ## Design discipline
 
-These rules came out of a real session. Bake them in — don't rediscover them.
+These rules came out of a real session. Bake them in — don't rediscover them. (These are for grid comparisons; the tuner section above has its own short list.)
 
 - **One variable per cell.** Same content, same artwork, same padding, same bg. The only thing that changes is the variable under test. If the user mixes variables, run two sequential pages.
 - **Label by token name, not raw value.** `B — --shadow-sheet` beats `B — 0 -8px 32px rgba(0,0,0,0.5) inset`. Decisions are made on intent, not pixel math.
@@ -115,7 +143,7 @@ These rules came out of a real session. Bake them in — don't rediscover them.
 - **Background context changes perception.** Shadows look invisible on flat backgrounds and fine when there's a subtle gradient above the edge. If the deployed environment has a gradient/glow/image behind the element (planned or shipped), simulate it in the cell background.
 - **Show the obvious-wrong default when instructive.** Tailwind's `shadow-2xl` casts downward — wrong for bottom-anchored sheets that need an upward shadow. Including a "wrong direction" cell can clarify *why* the right one is right.
 
-## Out of scope (v1)
+## Out of scope
 
-- **Animation comparison** (`--ease-out` vs `--ease-spring`). Future direction: a duration/easing slider per cell. Until then, build a focused interactive prototype for motion decisions.
-- **Multi-variable matrices.** Run two sequential single-variable pages instead.
+- **Real cross-browser / device rendering.** The page previews one engine on your machine; for actual Safari-vs-Chrome or real-device behavior, test there.
+- **Multi-variable grids.** Don't lay out a grid of combinations — it hides which axis caused the effect; run two sequential single-variable pages instead. (The tuner *can* expose two genuinely independent variables at once when the user wants to feel them together — warn the signal is weaker and offer a single-axis pass afterward. Duration + easing aren't independent — they're one motion, so that's not a matrix; expose both freely.)

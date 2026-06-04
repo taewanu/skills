@@ -12,6 +12,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>__PROJECT__ — visual compare</title>
     <style>
+      /* ===== Base color fallbacks — a project token block pasted below overrides these ===== */
+      :root {
+        --color-void: #0a0a0a;
+        --color-night: #161616;
+        --color-atmos: rgba(127, 127, 127, 0.22);
+        --color-fg-1: #f5f5f5;
+        --color-fg-2: #c9c9c9;
+        --color-fg-3: #8a8a8a;
+        --color-sunrise: #ff6b47;
+        --color-aurora: #6be5c5;
+      }
+
       /* ===== TOKENS (paste from project; both themes) ===== */
       <!-- TOKENS -->
 
@@ -248,7 +260,7 @@
 
         document.querySelectorAll(".pick-btn").forEach((btn) => {
           btn.addEventListener("click", async () => {
-            const text = `pick: ${btn.dataset.pick}`;
+            const text = `pick: ${btn.dataset.pick} @ theme=${root.dataset.theme} vp=${frame.dataset.vp}`;
             try {
               await navigator.clipboard.writeText(text);
             } catch (e) {

@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<!--
+  visual-code-review page template. One self-contained file; both modes fill it.
+  Fill these regions before opening:
+    1. <title>, [data-title], and the .summary-block (a one-line [data-summary] + bullets)
+    2. .bar-meta — the diffstat / branch-or-range stats shown above the toolbar
+    3. <nav class="nav"> — one <a> per file (review) or per section (explain)
+    4. CONTENT marker — diff .file blocks with anchored .note callouts (review),
+       or .section blocks with a diagram + annotated .snippet (explain)
+    5. DIAGRAM marker — inline SVG/HTML flow, when a picture beats prose
+    6. GOTCHAS marker — gotchas / open questions
+  See the commented authoring stub at the bottom for the exact shapes to copy.
+  Mechanics — sticky toolbar (file-list collapse · Unified/Split · Wrap · Whitespace · Theme),
+  split-view builder, click-to-copy notes + summary — are solved; copy the style + script blocks verbatim.
+-->
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>__TITLE__ — visual code review</title>
+    <style>
+      :root,
+      [data-theme="dark"] {
+        --bg: #0d1117;
+        --bg-elev: #161b22;
+        --fg: #e6edf3;
+        --fg-muted: #8b949e;
+        --border: #30363d;
+        --accent: #58a6ff;
+        --add-bg: rgba(46, 160, 67, 0.18);
+        --del-bg: rgba(248, 81, 73, 0.16);
+        --ln-fg: #6e7681;
+        --info: #58a6ff;
+        --watch: #d29922;
+        --risk: #f85149;
+        --question: #bc8cff;
+      }
+      [data-theme="light"] {
+        --bg: #ffffff;
+        --bg-elev: #f6f8fa;
+        --fg: #1f2328;
+        --fg-muted: #656d76;
+        --border: #d1d9e0;
+        --accent: #0969da;
+        --add-bg: #e6ffec;
+        --del-bg: #ffebe9;
+        --ln-fg: #8c959f;
+        --info: #0969da;
+        --watch: #9a6700;
+        --risk: #cf222e;
+        --question: #8250df;
+      }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
+      html, body {
+        background: var(--bg);
+        color: var(--fg);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        font-size: 15px;
+        line-height: 1.55;
+        transition: background 160ms ease, color 160ms ease;
+      }
+      code, .mono, .code, .hunk-head, .ln { font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace; }
+      a { color: var(--accent); text-decoration: none; }
+
+      /* ===== Theme toggle (lives at the right end of the diff toolbar) ===== */
+      #theme-toggle { padding: 6px 10px; font-size: 13px; }
+
+      /* ===== Diff toolbar: view options + review actions, sticky next to the code ===== */
+      .bar-row { position: sticky; top: 0; z-index: 50; max-width: var(--page-w); margin: 0 auto; padding: 12px 24px; background: var(--bg); }
+      .bar-meta { display: flex; justify-content: flex-end; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; font-family: ui-monospace, monospace; font-size: 12.5px; color: var(--fg-muted); }
+      .bar-meta .sep { width: 1px; height: 13px; background: var(--border); }
+      .bar-meta .add { color: #3fb950; }
+      .bar-meta .ref { padding: 1px 7px; border-radius: 6px; background: var(--bg-elev); border: 1px solid var(--border); color: var(--fg); font-size: 11.5px; }
+      .diff-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 6px; background: var(--bg-elev); border: 1px solid var(--border); border-radius: 12px; backdrop-filter: blur(12px); }
+      .diff-bar .bar-push { margin-left: auto; }
+      .diff-bar .bar-sep { width: 1px; align-self: stretch; background: var(--border); margin: 2px; }
+      .toolbar-group { display: flex; gap: 2px; padding: 2px; background: var(--bg); border-radius: 9999px; }
+      .toolbar-group button {
+        all: unset; cursor: pointer;
+        padding: 6px 12px; border-radius: 9999px;
+        color: var(--fg-muted); font-size: 11px; line-height: 1;
+        transition: background 120ms ease, color 120ms ease;
+      }
+      .toolbar-group button:hover { color: var(--fg); }
+      .toolbar-group button.active { background: var(--border); color: var(--fg); }
+
+      /* ===== Page width (widens in split view so two columns get room) ===== */
+      :root { --page-w: 1100px; }
+      body.split { --page-w: min(1680px, 96vw); }
+
+      /* ===== Header ===== */
+      header.page { padding: 40px 24px 18px; max-width: var(--page-w); margin: 0 auto; }
+      header.page h1 { font-size: 28px; font-weight: 600; letter-spacing: -0.01em; }
+      /* summary block = one hover/click chunk, like a review note (whole thing copies; icon is a cue) */
+      .summary-block { position: relative; max-width: 92ch; cursor: pointer; border-radius: 8px; outline: 1px solid transparent; outline-offset: 6px; transition: outline-color 150ms ease; }
+      .summary-block:hover { outline-color: var(--border); }
+      .summary-block.flash { outline-color: var(--accent); }
+      .summary-copy { position: absolute; right: 0; bottom: 0; padding: 1px 4px; border-radius: 5px; font-family: ui-monospace, monospace; font-size: 12px; color: var(--fg-muted); opacity: 0; pointer-events: none; transition: opacity 120ms ease, color 120ms ease; }
+      .summary-copy::before { content: "⧉"; }
+      .summary-block:hover .summary-copy { opacity: 0.8; color: var(--accent); }
+      .summary-block.flash .summary-copy { opacity: 1; color: #3fb950; }
+      .summary-block.flash .summary-copy::before { content: "✓"; }
+      header.page .subtitle { color: var(--fg); font-size: 16px; line-height: 1.5; margin-top: 12px; }
+      header.page .summary-points { margin: 8px 0 0 18px; color: var(--fg-muted); font-size: 14px; line-height: 1.6; }
+      header.page .summary-points code { font-family: ui-monospace, monospace; font-size: 12.5px; }
+
+      /* ===== Layout: sticky nav + main ===== */
+      .layout { display: grid; grid-template-columns: 200px 1fr; gap: 24px; max-width: var(--page-w); margin: 0 auto; padding: 0 24px 80px; }
+      .nav { position: sticky; top: 96px; align-self: start; display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+      .nav a { padding: 4px 8px; border-radius: 6px; color: var(--fg-muted); font-family: ui-monospace, monospace; }
+      .nav a:hover { background: var(--bg-elev); color: var(--fg); }
+      .main { min-width: 0; display: flex; flex-direction: column; gap: 28px; }
+      @media (max-width: 760px) { .layout { grid-template-columns: 1fr; } .nav { position: static; flex-direction: row; flex-wrap: wrap; } }
+
+      /* ===== File / section block ===== */
+      .file, .section { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--bg-elev); }
+      .file-head, .section-head {
+        display: flex; align-items: center; justify-content: space-between; gap: 8px;
+        padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--bg);
+      }
+      .file-head .path { font-family: ui-monospace, monospace; font-size: 13px; }
+      .file-head .meta { font-size: 12px; color: var(--fg-muted); font-family: ui-monospace, monospace; }
+      .section-head h2 { font-size: 15px; font-weight: 600; }
+      .block-body { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+
+      details.file > summary.file-head { cursor: pointer; list-style: none; justify-content: flex-start; gap: 8px; }
+      details.file > summary.file-head::-webkit-details-marker { display: none; }
+      details.file > summary.file-head::before { content: "▾"; color: var(--fg-muted); font-size: 11px; }
+      details.file:not([open]) > summary.file-head::before { content: "▸"; }
+      details.file > summary.file-head .meta { margin-left: auto; }
+
+      /* ===== Diff ===== */
+      .hunk { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+      .hunk-head { padding: 4px 12px; color: var(--fg-muted); font-size: 12px; background: var(--bg); border-bottom: 1px solid var(--border); }
+      .lines { overflow-x: auto; }
+      .line { display: grid; grid-template-columns: 48px 1fr; font-size: 12.5px; }
+      .line .ln { text-align: right; padding: 0 10px; color: var(--ln-fg); user-select: none; border-right: 1px solid var(--border); }
+      .line .code { padding: 0 12px; white-space: pre; }
+      body.wrap .line .code { white-space: pre-wrap; word-break: break-word; }
+      .line.add { background: var(--add-bg); }
+      .line.del { background: var(--del-bg); }
+
+      /* ===== Split (side-by-side) view ===== */
+      .lines-split { display: none; }
+      body.split .hunk .lines { display: none; }
+      body.split .hunk .lines-split { display: block; }
+      .srow { display: grid; grid-template-columns: 1fr 1fr; }
+      .scell { display: grid; grid-template-columns: 40px 1fr; min-width: 0; border-right: 1px solid var(--border); font-size: 12.5px; }
+      .scell.right { border-right: none; }
+      .scell .ln { text-align: right; padding: 0 8px; color: var(--ln-fg); user-select: none; }
+      .scell .code { padding: 0 10px; white-space: pre; overflow-x: auto; }
+      body.wrap .scell .code { white-space: pre-wrap; word-break: break-word; }
+      .scell.add { background: var(--add-bg); }
+      .scell.del { background: var(--del-bg); }
+      .scell.empty { background: rgba(127, 127, 127, 0.045); }
+
+      /* ===== Nav drawer (toggled from the diff toolbar; button stays put, icon reflects state) ===== */
+      body.nav-collapsed .layout { grid-template-columns: 1fr; }
+      body.nav-collapsed .nav { display: none; }
+      #nav-toggle { padding: 6px 9px; }
+      #nav-toggle svg { display: block; }
+      #nav-toggle .sb-rail { transition: opacity 120ms ease; }
+      body.nav-collapsed #nav-toggle .sb-rail { opacity: 0; }
+
+      /* ===== Show whitespace ===== */
+      .ws { color: var(--fg-muted); opacity: 0.42; }
+
+      /* ===== Annotation note (anchored under the hunk it's about) ===== */
+      .note {
+        position: relative;
+        border-left: 3px solid var(--info);
+        background: var(--bg);
+        border-radius: 0 8px 8px 0;
+        padding: 8px 12px; font-size: 13.5px; cursor: pointer;
+        transition: outline-color 150ms ease;
+        outline: 1px solid transparent;
+      }
+      .note:hover { outline-color: var(--border); }
+      .note.flash { outline-color: var(--accent); }
+      .note::before { font-weight: 600; margin-right: 6px; }
+      .note.info { border-left-color: var(--info); }
+      .note.info::before { content: "ℹ"; color: var(--info); }
+      .note.watch { border-left-color: var(--watch); }
+      .note.watch::before { content: "⚠"; color: var(--watch); }
+      .note.risk { border-left-color: var(--risk); }
+      .note.risk::before { content: "✕"; color: var(--risk); }
+      .note.question { border-left-color: var(--question); }
+      .note.question::before { content: "?"; color: var(--question); }
+      .note .ref { font-family: ui-monospace, monospace; color: var(--fg-muted); font-size: 12px; }
+      .note-copy { position: absolute; bottom: 6px; right: 8px; padding: 1px 4px; border-radius: 5px; background: var(--bg); font-family: ui-monospace, monospace; font-size: 11.5px; color: var(--fg-muted); opacity: 0; pointer-events: none; transition: opacity 120ms ease, color 120ms ease; }
+      .note-copy::before { content: "⧉"; }
+      .note:hover .note-copy { opacity: 0.8; color: var(--accent); }
+      .note.flash .note-copy { opacity: 1; color: #3fb950; }
+      .note.flash .note-copy::before { content: "✓"; }
+
+      /* ===== Annotated snippet (explain mode) ===== */
+      .snippet { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+      .snippet pre { padding: 12px; overflow-x: auto; font-size: 12.5px; }
+      body.wrap .snippet pre { white-space: pre-wrap; word-break: break-word; }
+      .prose { font-size: 14.5px; max-width: 72ch; }
+      .prose p + p { margin-top: 10px; }
+
+      /* ===== Diagram + gotchas ===== */
+      .diagram { display: flex; justify-content: center; padding: 8px; }
+      .diagram svg { max-width: 100%; height: auto; }
+      .gotchas { border: 1px dashed var(--border); border-radius: 10px; padding: 16px; }
+      .gotchas h2 { font-size: 15px; margin-bottom: 10px; }
+      .skipped { color: var(--fg-muted); font-size: 13px; font-style: italic; margin-top: 12px; }
+    </style>
+  </head>
+  <body>
+    <header class="page">
+      <h1 data-title>__TITLE__</h1>
+      <div class="summary-block">
+        <p class="subtitle"><span data-summary>__ONE-LINE SUMMARY OF THE CHANGE / SUBJECT__</span></p>
+        <ul class="summary-points">
+          <li>__key point — what the change does / what to look at__</li>
+          <li>__another point — the shape of the change, or the subsystem's spine__</li>
+        </ul>
+        <span class="summary-copy" aria-hidden="true"></span>
+      </div>
+    </header>
+
+    <div class="bar-row">
+      <div class="bar-meta">
+        <span>__N__ files</span>
+        <span class="sep"></span>
+        <span class="diffstat"><span class="add">+__X__</span> <span class="del">−__Y__</span></span>
+        <span class="sep"></span>
+        <span class="branch"><code class="ref">__head__</code> → <code class="ref">__base__</code></span>
+      </div>
+      <div class="diff-bar">
+        <div class="toolbar-group" role="group" aria-label="File list">
+          <button type="button" id="nav-toggle" title="Hide file list">
+            <svg class="sb-ico" viewBox="0 0 16 16" width="13" height="13" aria-hidden="true">
+              <rect x="1.5" y="2.5" width="13" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.3" />
+              <rect class="sb-rail" x="2.4" y="3.4" width="3.6" height="9.2" rx="1" fill="currentColor" />
+            </svg>
+          </button>
+        </div>
+        <div class="toolbar-group bar-push" role="group" aria-label="Diff layout">
+          <button type="button" data-layout-set="unified">Unified</button>
+          <button type="button" data-layout-set="split">Split</button>
+        </div>
+        <div class="toolbar-group" role="group" aria-label="Wrap long lines">
+          <button type="button" id="wrap-toggle">Wrap</button>
+        </div>
+        <div class="toolbar-group" role="group" aria-label="Show whitespace">
+          <button type="button" id="ws-toggle">Whitespace</button>
+        </div>
+        <span class="bar-sep" aria-hidden="true"></span>
+        <div class="toolbar-group" role="group" aria-label="Theme">
+          <button type="button" id="theme-toggle" title="Toggle light / dark" aria-label="Toggle theme">☀</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="layout">
+      <nav class="nav">
+        <!-- one <a href="#id"> per file (review) or section (explain) -->
+        <!-- <a href="#f-parser">parser.ts</a> -->
+      </nav>
+
+      <main class="main">
+        <!-- CONTENT -->
+
+        <!-- DIAGRAM (optional; drop a .section with an inline <svg> when a flow helps) -->
+
+        <!-- GOTCHAS -->
+        <!--
+        <section class="gotchas" id="gotchas">
+          <h2>Notes &amp; open questions</h2>
+          <div class="block-body" style="padding:0">
+            <div class="note question" data-annot data-group="General">Does the retry path double-count metrics? Couldn't tell from the diff.</div>
+          </div>
+          <p class="skipped">Skipped: generated / lockfiles, *.snap — not reviewed.</p>
+        </section>
+        -->
+      </main>
+    </div>
+
+    <!--
+      ============================ AUTHORING STUBS ============================
+      Copy these shapes into the regions above. Delete what you don't use.
+      NOTE: code/diff text is literal — HTML-escape it: &lt; &gt; &amp; (in source: &amp;lt; &amp;gt; &amp;amp;).
+
+      REVIEW MODE — a collapsible file with one hunk and two anchored notes.
+      Each .note is click-to-copy (a corner icon appears on hover; the whole note is the
+      target). data-group records which file/section the note belongs to. The line ref is
+      written inline so it travels into the copied text.
+
+      <details class="file" id="f-parser" open>
+        <summary class="file-head">
+          <span class="path">src/parser.ts</span>
+          <span class="meta">+18 −4</span>
+        </summary>
+        <div class="block-body">
+          <div class="hunk">
+            <div class="hunk-head">@@ -40,7 +40,9 @@ function parse(input)</div>
+            <div class="lines">
+              <div class="line ctx"><span class="ln">40</span><span class="code">  const tokens = lex(input);</span></div>
+              <div class="line del"><span class="ln">41</span><span class="code">-  return tokens.map(build);</span></div>
+              <div class="line add"><span class="ln">41</span><span class="code">+  if (!tokens.length) return [];</span></div>
+              <div class="line add"><span class="ln">42</span><span class="code">+  return tokens.map(build);</span></div>
+            </div>
+          </div>
+          <div class="note watch" data-annot data-group="src/parser.ts">
+            <span class="ref">L41</span> early-return on empty is good, but callers in renderer.ts assume a non-empty array. Worth checking.
+          </div>
+          <div class="note question" data-annot data-group="src/parser.ts">
+            <span class="ref">L41</span> is empty input actually reachable, or guarded upstream?
+          </div>
+        </div>
+      </details>
+
+      EXPLAIN MODE — a section with prose, a diagram, and an annotated snippet:
+
+      <section class="section" id="s-flow">
+        <div class="section-head"><h2>Token bucket flow</h2></div>
+        <div class="block-body">
+          <div class="prose"><p>Each request takes a token; the refiller tops up on an interval…</p></div>
+          <div class="diagram">
+            <svg viewBox="0 0 360 90" role="img" aria-label="bucket flow">
+              <defs><marker id="a" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="currentColor"/></marker></defs>
+              <rect x="8" y="30" width="90" height="30" rx="6" fill="none" stroke="currentColor"/>
+              <text x="53" y="50" text-anchor="middle" font-size="12" fill="currentColor">request</text>
+              <line x1="98" y1="45" x2="140" y2="45" stroke="currentColor" marker-end="url(#a)"/>
+              <rect x="140" y="30" width="90" height="30" rx="6" fill="none" stroke="currentColor"/>
+              <text x="185" y="50" text-anchor="middle" font-size="12" fill="currentColor">take()</text>
+            </svg>
+          </div>
+          <div class="snippet"><pre><code>function take() {
+  if (this.tokens &lt; 1) return false; // backpressure point
+  this.tokens -= 1; return true;
+}</code></pre></div>
+          <div class="note watch" data-annot data-group="src/bucket.ts">
+            <span class="ref">take()</span> returns false rather than throwing; callers must check the return, not try/catch.
+          </div>
+        </div>
+      </section>
+      =========================================================================
+    -->
+    <script>
+      (function () {
+        const root = document.documentElement;
+        const $ = (s) => document.querySelector(s);
+        const $$ = (s) => [...document.querySelectorAll(s)];
+        const THEME_KEY = "visual-code-review-theme";
+        const WRAP_KEY = "visual-code-review-wrap";
+        const KIND_ICON = { info: "ℹ️", watch: "⚠️", risk: "🛑", question: "❓" };
+
+        function applyTheme(t) {
+          root.dataset.theme = t;
+          const tog = $("#theme-toggle");
+          if (tog) tog.textContent = t === "dark" ? "☀" : "🌙";
+        }
+        function applyWrap(on) {
+          document.body.classList.toggle("wrap", on);
+          $("#wrap-toggle")?.classList.toggle("active", on);
+        }
+        applyTheme(localStorage.getItem(THEME_KEY) || "dark");
+        applyWrap(localStorage.getItem(WRAP_KEY) === "on");
+        $("#theme-toggle")?.addEventListener("click", () => {
+          const next = root.dataset.theme === "dark" ? "light" : "dark";
+          applyTheme(next); localStorage.setItem(THEME_KEY, next);
+        });
+        $("#wrap-toggle")?.addEventListener("click", () => {
+          const on = !document.body.classList.contains("wrap");
+          applyWrap(on); localStorage.setItem(WRAP_KEY, on ? "on" : "off");
+        });
+
+        // ===== Unified ↔ Split view =====
+        const LAYOUT_KEY = "visual-code-review-layout";
+        function splitCell(side, src) {
+          const c = document.createElement("div");
+          c.className = "scell " + side;
+          if (!src) { c.classList.add("empty"); return c; }
+          c.classList.add(src.classList.contains("add") ? "add" : src.classList.contains("del") ? "del" : "ctx");
+          c.appendChild(src.querySelector(".ln").cloneNode(true));
+          c.appendChild(src.querySelector(".code").cloneNode(true));
+          return c;
+        }
+        function buildSplit(lines) {
+          const rows = [...lines.querySelectorAll(".line")];
+          const out = document.createElement("div");
+          out.className = "lines-split";
+          let i = 0;
+          while (i < rows.length) {
+            const row = document.createElement("div");
+            row.className = "srow";
+            if (rows[i].classList.contains("ctx")) {
+              row.appendChild(splitCell("left", rows[i]));
+              row.appendChild(splitCell("right", rows[i]));
+              out.appendChild(row);
+              i++;
+            } else {
+              const dels = [], adds = [];
+              while (i < rows.length && rows[i].classList.contains("del")) dels.push(rows[i++]);
+              while (i < rows.length && rows[i].classList.contains("add")) adds.push(rows[i++]);
+              const n = Math.max(dels.length, adds.length) || 1;
+              for (let k = 0; k < n; k++) {
+                const r = document.createElement("div");
+                r.className = "srow";
+                r.appendChild(splitCell("left", dels[k] || null));
+                r.appendChild(splitCell("right", adds[k] || null));
+                out.appendChild(r);
+              }
+            }
+          }
+          return out;
+        }
+        let splitBuilt = false;
+        function ensureSplit() {
+          if (splitBuilt) return;
+          $$(".hunk .lines").forEach((l) => l.after(buildSplit(l)));
+          splitBuilt = true;
+          applyWs(wsOn);
+        }
+        function applyLayout(l) {
+          if (l === "split") ensureSplit();
+          document.body.classList.toggle("split", l === "split");
+          $$("[data-layout-set]").forEach((b) => b.classList.toggle("active", b.dataset.layoutSet === l));
+        }
+        applyLayout(localStorage.getItem(LAYOUT_KEY) || "unified");
+        $$("[data-layout-set]").forEach((b) => b.addEventListener("click", () => { applyLayout(b.dataset.layoutSet); localStorage.setItem(LAYOUT_KEY, b.dataset.layoutSet); }));
+
+        // ===== File-list drawer (one toggle in the diff toolbar; icon reflects state) =====
+        const NAV_KEY = "visual-code-review-nav";
+        function applyNav(state) {
+          const off = state === "off";
+          document.body.classList.toggle("nav-collapsed", off);
+          const t = $("#nav-toggle");
+          if (t) { t.classList.toggle("active", !off); t.title = off ? "Show file list" : "Hide file list"; }
+        }
+        applyNav(localStorage.getItem(NAV_KEY) || "on");
+        $("#nav-toggle")?.addEventListener("click", () => {
+          const next = document.body.classList.contains("nav-collapsed") ? "on" : "off";
+          applyNav(next); localStorage.setItem(NAV_KEY, next);
+        });
+
+        // ===== Show whitespace (on-demand; not stripped by default) =====
+        let wsOn = false;
+        const escHtml = (t) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        const wsTransform = (t) => escHtml(t).replace(/\t/g, '<span class="ws">→</span>').replace(/ /g, '<span class="ws">·</span>');
+        $$(".code").forEach((c) => { if (c.dataset.orig === undefined) c.dataset.orig = c.textContent; });
+        function applyWs(on) {
+          wsOn = on;
+          $$(".code").forEach((c) => {
+            const base = c.dataset.orig !== undefined ? c.dataset.orig : c.textContent;
+            c.innerHTML = on ? wsTransform(base) : escHtml(base);
+          });
+          $("#ws-toggle")?.classList.toggle("active", on);
+        }
+        applyWs(false);
+        $("#ws-toggle")?.addEventListener("click", () => applyWs(!wsOn));
+
+        async function copyText(text, btn) {
+          try { await navigator.clipboard.writeText(text); }
+          catch (e) {
+            const ta = document.createElement("textarea");
+            ta.value = text; document.body.appendChild(ta); ta.select();
+            document.execCommand("copy"); ta.remove();
+          }
+          if (btn) {
+            btn.classList.add("copied");
+            clearTimeout(btn._copiedT);
+            btn._copiedT = setTimeout(() => btn.classList.remove("copied"), 1200);
+          }
+        }
+
+        const noteKind = (n) => ["risk", "watch", "question", "info"].find((k) => n.classList.contains(k)) || "info";
+        const noteText = (n) => n.textContent.replace(/\s+/g, " ").trim();
+        const clean = (s, fallback) => { s = (s || "").trim(); return !s || s.startsWith("__") ? fallback : s; };
+
+        const summaryBlock = $(".summary-block");
+        if (summaryBlock) {
+          summaryBlock.title = "click to copy the summary";
+          summaryBlock.addEventListener("click", () => {
+            copyText(clean($("[data-summary]")?.textContent, ""), null);
+            summaryBlock.classList.add("flash");
+            setTimeout(() => summaryBlock.classList.remove("flash"), 600);
+          });
+        }
+
+        $$(".note[data-annot]").forEach((n) => {
+          n.title = "click to copy this note";
+          const ic = document.createElement("span");
+          ic.className = "note-copy";
+          ic.setAttribute("aria-hidden", "true");
+          n.appendChild(ic);
+          n.addEventListener("click", () => {
+            copyText(`${KIND_ICON[noteKind(n)]} ${noteText(n)}`, null);
+            n.classList.add("flash");
+            setTimeout(() => n.classList.remove("flash"), 600);
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>

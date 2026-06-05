@@ -22,6 +22,9 @@
         --color-fg-3: #8a8a8a;
         --color-sunrise: #ff6b47;
         --color-aurora: #6be5c5;
+        /* single highlight seam — map this to the project's accent and every highlight follows */
+        --accent: var(--color-aurora, #6be5c5);
+        --accent-ink: #0a0a0a;
       }
 
       /* ===== TOKENS (paste from project; both themes) ===== */
@@ -174,9 +177,9 @@
         border-color: var(--color-fg-3);
       }
       .pick-btn.copied {
-        background: var(--color-aurora, #6be5c5);
-        color: #0a0a0a;
-        border-color: var(--color-aurora, #6be5c5);
+        background: var(--accent);
+        color: var(--accent-ink);
+        border-color: var(--accent);
       }
     </style>
   </head>

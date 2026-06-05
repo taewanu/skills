@@ -43,9 +43,11 @@ Search in this order, stopping at the first source that has the tokens you need:
 
 Parse what's relevant to the variable under test (colors, font sizes, radii, shadows, easing/duration). Inline as `:root { --token: value; }` in the comparison page so it renders with the project's actual visual system, not Tailwind defaults.
 
+**Route the accent through `--accent`.** Both templates read every highlight — the slider, the copied state, the sample element — from one `--accent` token (with `--accent-ink` for text/icons on top of it). Point it at the project's accent so they track together: `--accent: var(--brand-primary)` (or whatever the project names it), and give `--accent-ink` a readable on-accent color. Left unmapped it falls back to the aurora teal — which is your cue you forgot to set it.
+
 If the project defines both dark and light token sets (`:root` + `[data-theme="light"]`, or `@media (prefers-color-scheme)`), copy both — the theme toggle in step 4 needs them.
 
-If the project ships **only one theme**, derive the other in-place: keep brand/accent colors (`--color-sunrise`, `--color-aurora`, etc.) unchanged, and invert lightness on the bg/fg ramp only (e.g. warm-white `#fafaf8` ↔ deep `#050608`). Don't agonize — this is just so the toggle works; the user assesses on the project's actual theme.
+If the project ships **only one theme**, derive the other in-place: keep brand/accent colors (`--accent`, `--color-sunrise`, etc.) unchanged, and invert lightness on the bg/fg ramp only (e.g. warm-white `#fafaf8` ↔ deep `#050608`). Don't agonize — this is just so the toggle works; the user assesses on the project's actual theme.
 
 ### 3. Build a single self-contained HTML file
 

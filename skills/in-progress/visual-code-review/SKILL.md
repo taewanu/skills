@@ -1,13 +1,13 @@
 ---
 name: visual-code-review
-description: Render a diff, PR, or slice of code as a single self-contained HTML page — the real diff with inline margin annotations, a flow/architecture diagram, the key snippets explained, risks and gotchas, open questions — then open it in the browser so the change reads by eye instead of scrolling a terminal diff or a wall of markdown. Copy-back buttons round-trip decisions to chat. Two modes — **review** (a change/diff/PR) and **explain** (existing code or a subsystem). Use whenever the user wants a change or codebase made legible visually — "이 diff 설명해줘", "PR 리뷰 보기 좋게 만들어줘", "이 코드 흐름 그림으로", "아키텍처 html로 설명", "walk me through this PR", "explain this diff/PR as html", "visualize this change", "help me understand this module", "render the diff with annotations", "make an html explainer for this code" — or any time you're about to dump a long diff or multi-paragraph code explanation as plain markdown and a navigable HTML artifact would land better. NOT a syntax-highlighter or code-to-markup converter, and NOT a graded correctness audit — that's `/code-review`; this renders understanding and can lay those findings over the diff. When the change is big or unfamiliar, prefer building the page over explaining in prose.
+description: Render a diff, PR, or slice of code as a single self-contained HTML page — the real diff with inline margin annotations, a flow/architecture diagram, the key snippets explained, risks and gotchas, open questions — then open it in the browser so the change reads by eye instead of scrolling a terminal diff or a wall of markdown. Click-to-copy notes and summary round-trip decisions to chat. Two modes — **review** (a change/diff/PR) and **explain** (existing code or a subsystem). Use whenever the user wants a change or codebase made legible visually — "이 diff 설명해줘", "PR 리뷰 보기 좋게 만들어줘", "이 코드 흐름 그림으로", "아키텍처 html로 설명", "walk me through this PR", "explain this diff/PR as html", "visualize this change", "help me understand this module", "render the diff with annotations", "make an html explainer for this code" — or any time you're about to dump a long diff or multi-paragraph code explanation as plain markdown and a navigable HTML artifact would land better. NOT a syntax-highlighter or code-to-markup converter, and NOT a graded correctness audit — that's `/code-review`; this renders understanding and can lay those findings over the diff. When the change is big or unfamiliar, prefer building the page over explaining in prose.
 ---
 
 # Visual Code Review
 
 Turn a code change — or a slice of an unfamiliar codebase — into a single self-contained HTML page that puts the **real code next to your analysis**: the diff with annotations in the margin, a flow diagram, the snippets that matter, gotchas, open questions. Open it in the browser, let the change read by eye, and round-trip the review back to chat.
 
-A terminal diff and a markdown write-up both linearize: you scroll the lines in one place and read the explanation somewhere else, holding the mapping in your head. HTML collapses that — the note sits in the margin of the exact hunk it's about, the flow is a diagram instead of a paragraph, severity is a color you skim. You stay in the loop because the artifact is built to be *read*, and its copy buttons feed your decisions straight back here.
+A terminal diff and a markdown write-up both linearize: you scroll the lines in one place and read the explanation somewhere else, holding the mapping in your head. HTML collapses that — the note sits in the margin of the exact hunk it's about, the flow is a diagram instead of a paragraph, severity is a color you skim. You stay in the loop because the artifact is built to be *read*, and its click-to-copy notes feed your decisions straight back here.
 
 ## Pick a mode
 
@@ -55,19 +55,22 @@ Mark what you're unsure about as a **question**, not a finding. Honesty is what 
 
 ### 3. Build one self-contained HTML file
 
-**Start from `templates/page.html`.** Copy the **mechanics verbatim** — theme toggle + `localStorage`, the file/section nav, the diff-line rendering, the annotation/severity note styles, and the copy-back JS (with `execCommand` fallback). Those are solved; re-deriving them just adds bug risk.
+**Start from `templates/page.html`.** Copy the **mechanics verbatim** — the sticky toolbar (file-list collapse, Unified/Split, Wrap, Whitespace, Theme) and its `localStorage` state, the diff-line rendering and the on-the-fly split-view builder, the annotation/severity note styles, and the click-to-copy JS (per-note + summary, with `execCommand` fallback). Those are solved; re-deriving them just adds bug risk.
 
 The **chrome** (colors, spacing, which sections appear, diagram style) is yours to tweak for the material. If the content needs something the template lacks — a sequence diagram, a state machine, a before/after toggle, a small perf table — **add it**; the template is a starting point, not the final form. If you make the same addition twice across invocations, fold it back into the template so it stops going stale.
+
+The page ships with a **sticky toolbar**: a file-list collapse toggle on the left, then **Unified/Split**, **Wrap**, and **Whitespace** (shows `·` / `→` on demand — it never strips), and a light/dark **Theme** toggle on the right — over a stats line reading `N files · +X −Y · head → base`. It's all pre-wired; you only fill the stats.
 
 Save to `/tmp/<project-slug>-visual-code-review.html`. Slug = `basename $PWD` lower-cased, non-alphanumeric → `-`, collapsed; fall back to `code` if empty.
 
 Fill the regions (each is a comment in the template):
 
-1. **Header** — title, one-line summary, and a context line (branch / PR / range, or the subsystem name).
-2. **Nav** — one entry per file (review) or per section (explain).
-3. **Content** — the rendered diff hunks with anchored annotations (review), or the sections + diagram + annotated snippets (explain).
-4. **Diagram slot** — inline SVG/HTML for the flow, when a picture beats prose.
-5. **Gotchas / open questions** block — also where a `skipped: …` coverage line lives when you didn't render everything.
+1. **Header** — title and the summary block: a one-line subtitle plus a few bullets. It reads as one chunk and is click-to-copy.
+2. **Stats meta** — the toolbar's `N files · +X −Y · head → base` line (the branch / PR / range, or the subsystem name).
+3. **Nav** — one entry per file (review) or per section (explain).
+4. **Content** — the rendered diff hunks with anchored annotations (review), or the sections + diagram + annotated snippets (explain).
+5. **Diagram slot** — inline SVG/HTML for the flow, when a picture beats prose.
+6. **Gotchas / open questions** block — also where a `skipped: …` coverage line lives when you didn't render everything.
 
 Rules for the content:
 
@@ -76,6 +79,7 @@ Rules for the content:
 - **Anchor every annotation.** A note lives next to the hunk or line it's about (a margin callout under the hunk), never as a detached essay at the bottom. Spatial proximity is the entire reason to be in HTML here.
 - **Color by meaning, sparingly.** add/remove tint for the diff; a small set of note kinds — `info` / `watch` / `risk` / `question` — as left-border colors. Don't rainbow it; the color has to mean something at a glance.
 - **Diagram only when it earns it.** A 4-box flow as SVG beats three sentences. A trivial linear flow doesn't need a picture — don't decorate.
+- **Author unified rows only.** Write the `.line` add/del/ctx rows once; Split is built from them on the fly, and Wrap / Whitespace are view toggles over the same markup. Don't hand-build a side-by-side.
 
 ### 4. Open in the browser
 
@@ -86,13 +90,14 @@ If the open command fails (headless server, SSH, missing `xdg-open`), don't retr
 
 ### 5. Round-trip, then wait in chat
 
-The artifact isn't the end — the decisions have to come back here. The template's copy buttons emit Claude-actionable markdown:
+The artifact isn't the end — the decisions have to come back here. Copy is **inline, attached to the content** — there's no global "copy everything" button; you lift the specific notes you're acting on:
 
-- **Copy notes as markdown** — assembles every annotation, grouped by its `data-group` (with its kind icon and inline line ref), into a markdown digest. In review mode set each note's `data-group` to its file path → it reads as a PR review comment; in explain mode set it to the section/concept → it reads as a takeaways list. The group label should match what's on screen (the file path / the section title).
-- **Copy summary** — the header summary line.
-- **Click any note** — copies that single concern/question.
+- **Click any note** — copies that one concern/question with its kind icon and inline line ref. A `⧉` icon appears in the note's corner on hover; the whole note is the click target and flashes ✓ on copy.
+- **Click the summary block** — copies the one-line summary.
 
-Say something like *"리뷰 페이지 띄웠어. 코멘트로 복붙하든가, 고칠 거 골라서 말해줘."* and stop. Don't poll the file.
+Write each note's line ref inline (`<span class="ref">L41</span>`) so it travels into the copied text, and set `data-group` to the file path (review) or the section/concept (explain) to record where the note belongs.
+
+Say something like *"리뷰 페이지 띄웠어. 고칠 거 골라서 노트 복붙하든가, 말로 알려줘."* and stop. Don't poll the file.
 
 ### 6. After: act, then clean up
 
@@ -104,7 +109,7 @@ Say something like *"리뷰 페이지 띄웠어. 코멘트로 복붙하든가, �
 - **Fidelity over summary.** A paraphrased diff is untrustworthy — the user can't tell what actually changed. Render the lines.
 - **Proximity is the point.** The note beside the hunk beats a notes section at the bottom. If you're writing a long detached analysis, you've lost the reason to be in HTML — move it into the margin or cut it.
 - **One file, no build.** Inline all CSS/JS/SVG. It has to open on a double-click and survive being copied to someone else's machine — no CDN, no `npm`, no external highlighter.
-- **Always round-trip.** Every page ends with copy-back buttons. An explainer you can't feed back into chat is a dead end; the loop is the whole point.
+- **Always round-trip.** Every note and the summary are click-to-copy, so decisions made in the page paste straight back into chat. An explainer you can't feed back is a dead end; the loop is the whole point.
 - **Say what you skipped.** Bounded coverage (top-N files, skipped a generated file) gets a visible line in the page, not silence.
 
 ## What this is not

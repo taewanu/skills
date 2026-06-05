@@ -2,9 +2,9 @@
 <!--
   visual-ui-compare page template.
   Fill in three regions before opening:
-    1. <!-- TOKENS --> — paste the project's token block (both themes; derive the missing one if needed)
+    1. the TOKENS marker — paste the project's token block (both themes; derive the missing one if needed)
     2. <title> and <h1> + <p> in <header class="page"> — name the comparison + variable
-    3. <!-- CELLS --> — one .variant block per cell; see the comment-stub at the bottom
+    3. the CELLS marker — one .variant block per cell; see the comment-stub at the bottom
 -->
 <html lang="en" data-theme="dark">
   <head>
@@ -12,6 +12,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>__PROJECT__ — visual compare</title>
     <style>
+      /* ===== Base color fallbacks — a project token block pasted below overrides these ===== */
+      :root {
+        --color-void: #0a0a0a;
+        --color-night: #161616;
+        --color-atmos: rgba(127, 127, 127, 0.22);
+        --color-fg-1: #f5f5f5;
+        --color-fg-2: #c9c9c9;
+        --color-fg-3: #8a8a8a;
+        --color-sunrise: #ff6b47;
+        --color-aurora: #6be5c5;
+        /* single highlight seam — map this to the project's accent and every highlight follows */
+        --accent: var(--color-aurora, #6be5c5);
+        --accent-ink: #0a0a0a;
+      }
+
       /* ===== TOKENS (paste from project; both themes) ===== */
       <!-- TOKENS -->
 
@@ -162,9 +177,9 @@
         border-color: var(--color-fg-3);
       }
       .pick-btn.copied {
-        background: var(--color-aurora, #6be5c5);
-        color: #0a0a0a;
-        border-color: var(--color-aurora, #6be5c5);
+        background: var(--accent);
+        color: var(--accent-ink);
+        border-color: var(--accent);
       }
     </style>
   </head>
@@ -199,11 +214,10 @@
                 <button type="button" class="pick-btn"
                         data-pick="A — --token-name (value) [current]">Pick this</button>
               </div>
-              <!-- optional, only when non-obvious:
+              optional .variant-tradeoff line, only when non-obvious:
               <div class="variant-tradeoff">trade-off note (e.g. bigger touch target, eats 8px vertical)</div>
-              -->
 
-              <!-- actual content under test — same across all cells, only the variable differs -->
+              actual content under test — same across all cells, only the variable differs
             </div>
           -->
         </div>
@@ -248,7 +262,7 @@
 
         document.querySelectorAll(".pick-btn").forEach((btn) => {
           btn.addEventListener("click", async () => {
-            const text = `pick: ${btn.dataset.pick}`;
+            const text = `pick: ${btn.dataset.pick} @ theme=${root.dataset.theme} vp=${frame.dataset.vp}`;
             try {
               await navigator.clipboard.writeText(text);
             } catch (e) {

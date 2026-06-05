@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<!--
+  visual-ui-compare INTERACTIVE template — for motion / continuous-range decisions
+  a static cell can't carry. Fill these regions before opening:
+    1. the TOKENS marker (in the style block) — paste the project's token block, both themes
+    2. <title> and <h1> + <p> in <header class="page"> — name the decision + variable
+    3. #preview — the element under test, driven by the CSS vars the controls set
+    4. .controls — one .control per variable (slider for numerics, select for presets)
+  The example below (a "pop" animation with duration / easing / scale) is just a
+  reference for the wiring — REPLACE it with the real preview + controls.
+  Mechanics (theme + viewport toggle, control→var binding, play/replay, copy) are
+  solved — copy them verbatim; the chrome and which controls you expose are yours.
+-->
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>__PROJECT__ — interactive tune</title>
+    <style>
+      /* ===== Base color fallbacks — a project token block pasted below overrides these ===== */
+      :root {
+        --color-void: #0a0a0a;
+        --color-night: #161616;
+        --color-atmos: rgba(127, 127, 127, 0.22);
+        --color-fg-1: #f5f5f5;
+        --color-fg-2: #c9c9c9;
+        --color-fg-3: #8a8a8a;
+        --color-sunrise: #ff6b47;
+        --color-aurora: #6be5c5;
+        /* single highlight seam — map this to the project's accent and every highlight follows */
+        --accent: var(--color-aurora, #6be5c5);
+        --accent-ink: #0a0a0a;
+      }
+
+      /* ===== TOKENS (paste from project; both themes) ===== */
+      <!-- TOKENS -->
+
+      :root {
+        --hairline: rgba(127, 127, 127, 0.12);
+        --hairline-strong: rgba(127, 127, 127, 0.22);
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-pill: 9999px;
+        --text-small: 13px;
+        --text-micro: 11px;
+        --text-h1: 32px;
+      }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
+      html, body {
+        background: var(--color-void, #0a0a0a);
+        color: var(--color-fg-1, #f5f5f5);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        font-size: var(--text-body, 15px);
+        line-height: 1.5;
+        transition: background 160ms ease, color 160ms ease;
+      }
+      .mono { font-family: ui-monospace, "SF Mono", monospace; }
+
+      /* ===== Toolbar (theme + viewport) ===== */
+      .toolbar {
+        position: fixed; top: 12px; right: 12px;
+        display: flex; gap: 6px; padding: 6px;
+        background: var(--color-night, var(--color-void));
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius-pill);
+        z-index: 100; font-family: ui-monospace, monospace; backdrop-filter: blur(12px);
+      }
+      .toolbar-group { display: flex; gap: 2px; padding: 2px; background: var(--color-void); border-radius: var(--radius-pill); }
+      .toolbar button {
+        all: unset; cursor: pointer; padding: 6px 12px; border-radius: var(--radius-pill);
+        color: var(--color-fg-3); font-size: var(--text-micro); line-height: 1;
+        transition: background 120ms ease, color 120ms ease;
+      }
+      .toolbar button:hover { color: var(--color-fg-1); }
+      .toolbar button.active { background: var(--color-atmos, var(--hairline-strong)); color: var(--color-fg-1); }
+
+      header.page { padding: 56px 24px 16px; }
+      header.page h1 { font-size: var(--text-h1); font-weight: 600; letter-spacing: -0.01em; }
+      header.page p { color: var(--color-fg-3); font-size: var(--text-small); margin-top: 4px; font-family: ui-monospace, monospace; }
+
+      /* ===== Viewport frame ===== */
+      .viewport-frame { margin: 0 auto; padding: 0 24px 64px; transition: max-width 200ms ease; }
+      .viewport-frame[data-vp="375"] { max-width: 375px; }
+      .viewport-frame[data-vp="768"] { max-width: 768px; }
+      .viewport-frame[data-vp="375"], .viewport-frame[data-vp="768"] { outline: 1px dashed var(--hairline-strong); outline-offset: 8px; }
+
+      /* ===== Stage (live preview) ===== */
+      .stage {
+        display: grid; place-items: center; min-height: 240px;
+        border: 1px solid var(--hairline); border-radius: var(--radius-md);
+        background: var(--color-night, var(--color-void)); margin-top: 12px; padding: 32px;
+      }
+
+      /* ===== Controls panel ===== */
+      .controls { display: flex; flex-direction: column; gap: 14px; margin-top: 16px; }
+      .control { display: grid; grid-template-columns: 180px 1fr 110px; align-items: center; gap: 12px; }
+      .control-name { font-family: ui-monospace, monospace; font-size: var(--text-small); color: var(--color-fg-2, #ccc); }
+      .control input[type="range"] { width: 100%; accent-color: var(--accent); }
+      .control select {
+        width: 100%; padding: 6px 8px; border-radius: var(--radius-sm);
+        background: var(--color-void); color: var(--color-fg-1); border: 1px solid var(--hairline-strong);
+        font-family: ui-monospace, monospace; font-size: var(--text-small);
+      }
+      .control-value { font-family: ui-monospace, monospace; font-size: var(--text-micro); color: var(--color-fg-3); text-align: right; }
+
+      /* ===== Action bar ===== */
+      .actions { display: flex; align-items: center; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+      .btn {
+        all: unset; cursor: pointer; padding: 7px 14px; border-radius: var(--radius-pill);
+        background: var(--color-void); border: 1px solid var(--hairline-strong);
+        color: var(--color-fg-2); font-size: var(--text-small); line-height: 1; font-family: ui-monospace, monospace;
+        transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+      }
+      .btn:hover { color: var(--color-fg-1); border-color: var(--color-fg-3); }
+      .btn.copied { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+      .values { font-family: ui-monospace, monospace; font-size: var(--text-micro); color: var(--color-fg-3); }
+
+      /* ===== EXAMPLE preview — replace with the real element under test ===== */
+      #preview {
+        --motion-duration: 240ms;
+        --motion-ease: cubic-bezier(0.2, 0, 0, 1);
+        --motion-scale: 1.08;
+      }
+      .sample-btn {
+        padding: 12px 22px; border-radius: var(--radius-pill);
+        background: var(--accent); color: var(--accent-ink);
+        font-weight: 600; font-size: 15px; border: none;
+      }
+      #preview.run .sample-btn { animation: vuc-pop var(--motion-duration) var(--motion-ease); }
+      @keyframes vuc-pop {
+        0% { transform: scale(1); }
+        45% { transform: scale(var(--motion-scale)); }
+        100% { transform: scale(1); }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="toolbar">
+      <div class="toolbar-group" role="group" aria-label="Theme">
+        <button type="button" data-theme-set="light">☀ Light</button>
+        <button type="button" data-theme-set="dark">🌙 Dark</button>
+      </div>
+      <div class="toolbar-group" role="group" aria-label="Viewport">
+        <button type="button" data-vp-set="375">375</button>
+        <button type="button" data-vp-set="768">768</button>
+        <button type="button" data-vp-set="full">Full</button>
+      </div>
+    </div>
+
+    <header class="page">
+      <h1>__TITLE__</h1>
+      <p>__SUBTITLE — the variable(s) under test__</p>
+    </header>
+
+    <div class="viewport-frame" data-vp="full">
+      <!-- ===== Preview: the element under test, driven by the control vars ===== -->
+      <div class="stage">
+        <div id="preview">
+          <button type="button" class="sample-btn">Add to cart</button>
+        </div>
+      </div>
+
+      <!-- ===== Controls: one .control per variable. data-var = the CSS var it sets. ===== -->
+      <div class="controls">
+        <label class="control">
+          <span class="control-name">--motion-duration</span>
+          <input type="range" data-var="--motion-duration" data-unit="ms" min="80" max="600" step="10" value="240" />
+          <span class="control-value" data-readout="--motion-duration"></span>
+        </label>
+        <label class="control">
+          <span class="control-name">--motion-ease</span>
+          <select data-var="--motion-ease">
+            <option value="cubic-bezier(0.2, 0, 0, 1)">emphasized (current)</option>
+            <option value="ease-out">ease-out</option>
+            <option value="cubic-bezier(0.34, 1.56, 0.64, 1)">spring-ish</option>
+          </select>
+          <span class="control-value" data-readout="--motion-ease"></span>
+        </label>
+        <label class="control">
+          <span class="control-name">--motion-scale</span>
+          <input type="range" data-var="--motion-scale" min="1" max="1.3" step="0.01" value="1.08" />
+          <span class="control-value" data-readout="--motion-scale"></span>
+        </label>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn" id="play">▶ Play</button>
+        <button type="button" class="btn" id="copy-values">Copy these values</button>
+        <span class="values mono" id="values-readout"></span>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        const root = document.documentElement;
+        const frame = document.querySelector(".viewport-frame");
+        const preview = document.getElementById("preview");
+        const controls = [...document.querySelectorAll("[data-var]")];
+        const THEME_KEY = "visual-ui-compare-theme";
+        const VP_KEY = "visual-ui-compare-viewport";
+        const STATE_KEY = "visual-ui-compare-interactive";
+
+        function applyTheme(t) {
+          root.dataset.theme = t;
+          document.querySelectorAll("[data-theme-set]").forEach((b) => b.classList.toggle("active", b.dataset.themeSet === t));
+        }
+        function applyVp(v) {
+          frame.dataset.vp = v;
+          document.querySelectorAll("[data-vp-set]").forEach((b) => b.classList.toggle("active", b.dataset.vpSet === v));
+        }
+        applyTheme(localStorage.getItem(THEME_KEY) || "dark");
+        applyVp(localStorage.getItem(VP_KEY) || "full");
+        document.querySelectorAll("[data-theme-set]").forEach((b) => b.addEventListener("click", () => { applyTheme(b.dataset.themeSet); localStorage.setItem(THEME_KEY, b.dataset.themeSet); }));
+        document.querySelectorAll("[data-vp-set]").forEach((b) => b.addEventListener("click", () => { applyVp(b.dataset.vpSet); localStorage.setItem(VP_KEY, b.dataset.vpSet); }));
+
+        // ===== Control → CSS variable wiring =====
+        const unit = (c) => c.dataset.unit || "";
+        function apply(c) {
+          preview.style.setProperty(c.dataset.var, c.value + unit(c));
+          const r = document.querySelector(`[data-readout="${c.dataset.var}"]`);
+          if (r) r.textContent = c.value + unit(c);
+        }
+        function saveState() {
+          const s = {};
+          controls.forEach((c) => (s[c.dataset.var] = c.value));
+          localStorage.setItem(STATE_KEY, JSON.stringify(s));
+        }
+        function loadState() {
+          try {
+            const s = JSON.parse(localStorage.getItem(STATE_KEY) || "{}");
+            controls.forEach((c) => { if (s[c.dataset.var] != null) c.value = s[c.dataset.var]; });
+          } catch (e) {}
+        }
+        loadState();
+        controls.forEach((c) => { apply(c); c.addEventListener("input", () => { apply(c); saveState(); updateValues(); }); });
+
+        // ===== Play / replay (restart the animation with a forced reflow) =====
+        function play() { preview.classList.remove("run"); void preview.offsetWidth; preview.classList.add("run"); }
+        document.getElementById("play")?.addEventListener("click", play);
+
+        // ===== Copy these values (the round-trip back to chat) =====
+        function valuesText() {
+          const parts = controls.map((c) => `${c.dataset.var}: ${c.value}${unit(c)}`);
+          return `values: ${parts.join("; ")}  @ theme=${root.dataset.theme} vp=${frame.dataset.vp}`;
+        }
+        function updateValues() {
+          const el = document.getElementById("values-readout");
+          if (el) el.textContent = valuesText().replace(/^values: /, "");
+        }
+        updateValues();
+
+        async function copyText(text, btn) {
+          try { await navigator.clipboard.writeText(text); }
+          catch (e) {
+            const ta = document.createElement("textarea");
+            ta.value = text; document.body.appendChild(ta); ta.select();
+            document.execCommand("copy"); ta.remove();
+          }
+          if (btn) {
+            const o = btn.textContent;
+            btn.textContent = "✓ Copied"; btn.classList.add("copied");
+            setTimeout(() => { btn.textContent = o; btn.classList.remove("copied"); }, 1200);
+          }
+        }
+        document.getElementById("copy-values")?.addEventListener("click", (e) => copyText(valuesText(), e.currentTarget));
+      })();
+    </script>
+  </body>
+</html>

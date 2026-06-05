@@ -2,9 +2,9 @@
 <!--
   visual-ui-compare page template.
   Fill in three regions before opening:
-    1. <!-- TOKENS --> — paste the project's token block (both themes; derive the missing one if needed)
+    1. the TOKENS marker — paste the project's token block (both themes; derive the missing one if needed)
     2. <title> and <h1> + <p> in <header class="page"> — name the comparison + variable
-    3. <!-- CELLS --> — one .variant block per cell; see the comment-stub at the bottom
+    3. the CELLS marker — one .variant block per cell; see the comment-stub at the bottom
 -->
 <html lang="en" data-theme="dark">
   <head>
@@ -211,11 +211,10 @@
                 <button type="button" class="pick-btn"
                         data-pick="A — --token-name (value) [current]">Pick this</button>
               </div>
-              <!-- optional, only when non-obvious:
+              optional .variant-tradeoff line, only when non-obvious:
               <div class="variant-tradeoff">trade-off note (e.g. bigger touch target, eats 8px vertical)</div>
-              -->
 
-              <!-- actual content under test — same across all cells, only the variable differs -->
+              actual content under test — same across all cells, only the variable differs
             </div>
           -->
         </div>

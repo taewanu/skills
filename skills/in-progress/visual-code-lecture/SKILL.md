@@ -1,9 +1,9 @@
 ---
-name: code-lecture
+name: visual-code-lecture
 description: Walk through code one line at a time as a guided, hand-drawn lecture — a single self-contained HTML page you SCROLL: the real code is pinned on the left, the explanatory notes scroll down the right, and whichever note reaches the focus band lights up its line(s), sketches a circle / underline / arrow / highlighter swipe on them, and arcs a rough.js connector across to them (Excalidraw-style). One note is in focus at a time; everything else dims, so attention goes exactly where you point — like a 족집게 강의. Scroll to read at your own pace (◀ ▶ / arrow keys / dot / clicking a line or a dimmed note to jump); click-to-copy the focused note and a copy-transcript button round-trip the walkthrough back to chat. Use whenever the user wants code *taught* sequentially rather than scanned — "코드 한 줄씩 설명해줘", "족집게 강의처럼", "이 함수 따라가면서 설명", "이 로직 흐름 짚어줘", "라인별로 설명", "walk me through this line by line", "teach me this code", "explain this step by step", "guided tour of this function/file", "narrate this logic" — or any time a learner needs to follow a flow in order and a static wall of annotations would overwhelm. Sibling of `visual-code-review` (a static, scan-anywhere reference page with all annotations visible at once); reach for THIS when the goal is a paced, one-thing-at-a-time walkthrough. NOT a correctness audit (`/code-review`) and NOT a static annotated diff.
 ---
 
-# Code Lecture
+# Visual Code Lecture
 
 Turn a function, a logic flow, or an unfamiliar diff into a **guided, hand-drawn walkthrough you scroll** — a single self-contained HTML page with the real code **pinned on the left** and the notes **scrolling down the right** (scrollytelling). As each note reaches the focus band it becomes active: its line(s) light up (the rest dim), a mark is sketched on them like a teacher's pen, and a rough.js connector arcs from the note across to the code. One note is in focus at a time, so it reads like a lecture, not a wall of annotations — the reader sets the pace by scrolling (with ◀ ▶ / arrow keys / dots / click-a-line / click-a-dimmed-note as jumps — a focused card copies, a dimmed one navigates).
 
@@ -27,7 +27,7 @@ A static annotated page (that's `visual-code-review`) puts every note on screen 
 
 Same family, opposite reading model — they share the "render the real lines, self-contained HTML, round-trip to chat" DNA but answer different needs:
 
-| | `code-lecture` (this) | `visual-code-review` |
+| | `visual-code-lecture` (this) | `visual-code-review` |
 |---|---|---|
 | Reading | **Sequential** — one beat at a time | Scan freely, jump anywhere |
 | Attention | **Spotlight** — current line lit, rest dimmed | All annotations visible at once |
@@ -90,7 +90,7 @@ Geometry note: the overlay is **`position: fixed` (viewport coordinates)**, and 
 
 The hand-drawn look is **rough.js v4.6.6 embedded inline** (the same library Excalidraw is built on — `~27KB`, MIT). It's pasted into a `<script>` block so the page stays **one self-contained file**: it opens on a double-click and survives being copied to another machine — no CDN, no `npm`. That's the deliberate tradeoff vs. linking it: a bigger template file (~50KB) in exchange for zero runtime dependency. The colors are passed to rough.js at draw time (read from the live `--mark` CSS var, so marks re-tint with the theme); don't re-add a `stroke`/`fill` rule to `.sketch path` or it'll override rough's per-shape colors.
 
-Save to `/tmp/<project-slug>-code-lecture.html`. Slug = `basename $PWD` lower-cased, non-alphanumeric → `-`, collapsed; fall back to `code` if empty.
+Save to `/tmp/<project-slug>-visual-code-lecture.html`. Slug = `basename $PWD` lower-cased, non-alphanumeric → `-`, collapsed; fall back to `code` if empty.
 
 Fill the regions (each is a comment in the template):
 
@@ -112,7 +112,7 @@ Rules for the content:
 - macOS: `open <path>` · Linux: `xdg-open <path>` · WSL: `wslview <path>`, else `cmd.exe /c start <path>` · Windows: `start <path>`.
 - Detect via `uname` and `$WSL_DISTRO_NAME`.
 
-If the open command fails (headless / SSH / no `xdg-open`), don't retry blindly — print the absolute path and ask the user to open it: *"브라우저 자동 오픈이 안 돼. 이거 직접 열어줘: /tmp/foo-code-lecture.html"*.
+If the open command fails (headless / SSH / no `xdg-open`), don't retry blindly — print the absolute path and ask the user to open it: *"브라우저 자동 오픈이 안 돼. 이거 직접 열어줘: /tmp/foo-visual-code-lecture.html"*.
 
 ### 5. Round-trip, then wait in chat
 

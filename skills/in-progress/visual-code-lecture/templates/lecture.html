@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  code-lecture page template. One self-contained file — a guided, hand-drawn walkthrough you SCROLL.
+  visual-code-lecture page template. One self-contained file — a guided, hand-drawn walkthrough you SCROLL.
   Scrollytelling: the code is PINNED on the left; you scroll the notes down the right and the one
   in the focus band becomes active — its lines light up (the rest dim), a rough.js mark is sketched
   on them, and a rough.js connector arcs from the active note to the line. One note in focus at a
@@ -210,8 +210,8 @@
         const root = document.documentElement;
         const $ = (s) => document.querySelector(s);
         const $$ = (s) => [...document.querySelectorAll(s)];
-        const THEME_KEY = "code-lecture-theme";
-        const WRAP_KEY = "code-lecture-wrap";
+        const THEME_KEY = "visual-code-lecture-theme";
+        const WRAP_KEY = "visual-code-lecture-wrap";
 
         // ---------- theme / wrap ----------
         function applyTheme(t) { root.dataset.theme = t; const b = $("#theme-toggle"); if (b) b.textContent = t === "dark" ? "☀" : "🌙"; }

@@ -54,6 +54,14 @@
       .sketch path { stroke-linecap: round; stroke-linejoin: round; stroke-opacity: 0.8; } /* let the code read through the marks */
       .tag { position: fixed; z-index: 6; transform: rotate(-3deg); background: var(--mark); color: #fff; font-size: 12px; padding: 2px 9px; border-radius: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.25); white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 200ms ease; }
       .tag.show { opacity: 1; }
+      .tag.jump { pointer-events: auto; cursor: pointer; }
+      .tag.jump:hover { filter: brightness(1.12); }
+      /* clickable cross-link chip inside a note (keeps a two-beat relationship navigable) */
+      .note-card .see-row { margin-top: 9px; display: flex; flex-wrap: wrap; gap: 6px; }
+      .see-chip { display: inline-flex; align-items: center; gap: 3px; font: 11.5px ui-monospace, monospace; color: var(--note-fg); background: rgba(0,0,0,0.08); border: 1px solid rgba(0,0,0,0.2); border-radius: 9999px; padding: 2px 9px; cursor: pointer; }
+      .see-chip:hover { background: rgba(0,0,0,0.16); }
+      .line.flash-line { animation: flashln 1.1s ease; }
+      @keyframes flashln { 0%, 100% { background: transparent; } 25% { background: rgba(255,122,122,0.3); } }
 
       .wrap { max-width: 1040px; margin: 0 auto; padding: 0 22px; }
       /* ===== Scrollytelling: code pinned left, notes scroll right ===== */
@@ -146,7 +154,8 @@
     <!-- Beats: the lecture script (hidden source of truth; JS renders the scrolling cards).
          data-lines : which line(s) to spotlight — "41" | "41-44" | "41,47,50"
          data-mark  : circle (default) | box | underline | strike | highlight | none
-         data-to    : optional second range → draws an in-code connector to that range
+         data-to    : optional second range → in-code connector (off-screen → clickable ↑L<n> edge marker)
+         data-see   : optional line(s) → clickable "↗ jump to L<n>" chip(s) in the note (the two-beat link)
          data-tag   : optional one-word floating punch label
          The <li> text is the explanation, usually one tight BLUF sentence. WHEN a beat has
          2–4 parallel sub-points, use a summary lead + bullets (the lead is still the BLUF):
@@ -280,6 +289,15 @@
           const txt = document.createElement("div"); txt.className = "beat-text"; txt.innerHTML = b.innerHTML;
           const cc = document.createElement("span"); cc.className = "cap-copy"; cc.setAttribute("aria-hidden", "true");
           card.append(ref, txt, cc);
+          if (b.dataset.see) {                            // clickable cross-links to related lines (no stretched connector)
+            const row = document.createElement("div"); row.className = "see-row";
+            parseLines(b.dataset.see).forEach((n) => {
+              const chip = document.createElement("span"); chip.className = "see-chip"; chip.textContent = "↗ jump to L" + n;
+              chip.addEventListener("click", (e) => { e.stopPropagation(); jumpToLine(n); });
+              row.appendChild(chip);
+            });
+            txt.appendChild(row);
+          }
           card.addEventListener("click", () => { copyText(`${refLabel(b)}  ${beatPlain(b)}`); card.classList.add("flash"); setTimeout(() => card.classList.remove("flash"), 700); });
           step.appendChild(card); noteCol.appendChild(step);
         });
@@ -333,8 +351,10 @@
                 paths.push(...addNode(rc.line(b.cx, startY, b.cx, edgeY, pen)));
                 paths.push(...addNode(rc.line(b.cx, edgeY, b.cx - 6, edgeY + (up ? 11 : -11), pen)));
                 paths.push(...addNode(rc.line(b.cx, edgeY, b.cx + 6, edgeY + (up ? 11 : -11), pen)));
-                const lab = document.createElement("span"); lab.className = "tag";
+                const lab = document.createElement("span"); lab.className = "tag jump";
                 lab.textContent = (up ? "↑ L" : "↓ L") + t2[0] + (t2.length > 1 ? "–" + t2[t2.length - 1] : "");
+                lab.title = "jump to L" + t2[0];
+                lab.addEventListener("click", () => jumpToLine(t2[0]));
                 document.body.appendChild(lab);
                 lab.style.left = Math.max(8, b.cx - lab.offsetWidth / 2) + "px";
                 lab.style.top = (up ? edgeY + 4 : edgeY - 24) + "px";
@@ -415,6 +435,18 @@
         }
         function reposition() { if (cur >= 0) drawScene(cur, false); }
         function jumpTo(k) { programmatic = true; clearTimeout(pTimer); pTimer = setTimeout(() => (programmatic = false), 680); setActive(k); cards[k].scrollIntoView({ block: "center", behavior: "smooth" }); }
+        // jump to whatever beat owns line n (the clean case); if no beat focuses it, peek the line and flash it
+        function jumpToLine(n) {
+          let k = beats.findIndex((b) => parseLines(b.dataset.lines).includes(n));
+          if (k < 0) k = beats.findIndex((b) => b.dataset.to && parseLines(b.dataset.to).includes(n));
+          if (k >= 0) { jumpTo(k); return; }
+          const el = lineEl(n);
+          if (el && linesBox) {
+            const br = linesBox.getBoundingClientRect(), er = el.getBoundingClientRect();
+            linesBox.scrollTo({ top: linesBox.scrollTop + (er.top - br.top) - (linesBox.clientHeight / 2 - er.height / 2), behavior: "smooth" });
+            el.classList.add("flash-line"); setTimeout(() => el.classList.remove("flash-line"), 1100);
+          }
+        }
 
         let ticking = false;
         window.addEventListener("scroll", () => {

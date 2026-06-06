@@ -60,6 +60,10 @@
       .note-card .see-row { margin-top: 9px; display: flex; flex-wrap: wrap; gap: 6px; }
       .see-chip { display: inline-flex; align-items: center; gap: 3px; font: 11.5px ui-monospace, monospace; color: var(--note-fg); background: rgba(0,0,0,0.08); border: 1px solid rgba(0,0,0,0.2); border-radius: 9999px; padding: 2px 9px; cursor: pointer; }
       .see-chip:hover { background: rgba(0,0,0,0.16); }
+      .note-step:not(.active) .note-card .see-chip { pointer-events: none; opacity: 0.4; }  /* a dimmed card's chip is inert — a click focuses the card first, then the chip is live */
+      /* "↩ back" rides inside the focused card (dashed accent so it reads as return, vs the solid ↗ jump chips) */
+      .back-chip { all: unset; display: flex; width: fit-content; align-items: center; gap: 3px; margin: 9px 0 0; font: 600 11.5px ui-monospace, monospace; color: var(--mark); background: rgba(0,0,0,0.05); border: 1px dashed var(--mark); border-radius: 9999px; padding: 3px 10px; cursor: pointer; }
+      .back-chip:hover { background: var(--mark); color: #fff; }
       .line.flash-line { animation: flashln 1.1s ease; }
       @keyframes flashln { 0%, 100% { background: transparent; } 25% { background: rgba(255,122,122,0.3); } }
 
@@ -86,9 +90,11 @@
         box-shadow: 0 6px 18px rgba(0,0,0,0.28); transform: rotate(-0.6deg);
         transition: opacity 280ms ease, outline-color 150ms ease; outline: 2px solid transparent; outline-offset: 3px; }
       .note-step.active .note-card { opacity: 1; }
+      .note-step:not(.active) .note-card:hover { opacity: 0.72; }   /* lift a dimmed card on hover — it's a jump target */
       .note-card:hover { outline-color: var(--mark); }
       .note-card.flash { outline-color: var(--mark); }
-      .note-card .beat-ref { display: inline-block; font-family: ui-monospace, monospace; font-size: 11.5px; color: var(--note-fg); background: rgba(0,0,0,0.07); border-radius: 6px; padding: 1px 8px; margin-bottom: 8px; }
+      .note-card .note-num { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; min-width: 20px; height: 20px; padding: 0 6px; margin: 0 8px 8px 0; border-radius: 9999px; background: var(--mark); color: #fff; font: 600 11px ui-monospace, monospace; }
+      .note-card .beat-ref { display: inline-block; vertical-align: middle; font-family: ui-monospace, monospace; font-size: 11.5px; color: var(--note-fg); background: rgba(0,0,0,0.07); border-radius: 6px; padding: 1px 8px; margin-bottom: 8px; }
       .note-card .beat-text { font-size: 15px; line-height: 1.5; }
       .note-card .beat-text code { font-family: ui-monospace, monospace; font-size: 13px; background: rgba(0,0,0,0.08); padding: 1px 5px; border-radius: 5px; }
       .note-card .beat-text .lead { display: block; font-weight: 600; }
@@ -96,6 +102,7 @@
       .note-card .beat-text li { font-size: 14px; line-height: 1.45; }
       .note-card .cap-copy { position: absolute; right: 12px; bottom: 8px; font-family: ui-monospace, monospace; font-size: 11.5px; color: rgba(0,0,0,0.45); opacity: 0; transition: opacity 120ms ease; }
       .note-card .cap-copy::before { content: "⧉ copy"; }
+      .note-step:not(.active) .note-card .cap-copy::before { content: "↳ go to step"; }  /* dimmed card: a click navigates, doesn't copy */
       .note-card:hover .cap-copy { opacity: 1; }
       .note-card.flash .cap-copy::before { content: "✓ copied"; }
 
@@ -284,11 +291,12 @@
         const noteCol = $("#note-col");
         beats.forEach((b, k) => {
           const step = document.createElement("div"); step.className = "note-step"; step.dataset.k = k;
-          const card = document.createElement("div"); card.className = "note-card"; card.title = "click to copy this step";
+          const card = document.createElement("div"); card.className = "note-card";  // title set per active-state in setActive
+          const num = document.createElement("span"); num.className = "note-num"; num.textContent = k + 1;   // this note's step number, shown on the card for orientation
           const ref = document.createElement("span"); ref.className = "beat-ref"; ref.textContent = refLabel(b) || "";
           const txt = document.createElement("div"); txt.className = "beat-text"; txt.innerHTML = b.innerHTML;
           const cc = document.createElement("span"); cc.className = "cap-copy"; cc.setAttribute("aria-hidden", "true");
-          card.append(ref, txt, cc);
+          card.append(num, ref, txt, cc);
           if (b.dataset.see) {                            // clickable cross-links to related lines (no stretched connector)
             const row = document.createElement("div"); row.className = "see-row";
             parseLines(b.dataset.see).forEach((n) => {
@@ -298,7 +306,10 @@
             });
             txt.appendChild(row);
           }
-          card.addEventListener("click", () => { copyText(`${refLabel(b)}  ${beatPlain(b)}`); card.classList.add("flash"); setTimeout(() => card.classList.remove("flash"), 700); });
+          card.addEventListener("click", () => {
+            if (k !== cur) { jumpTo(k); return; }        // dimmed card → go there; focused card → copy it
+            copyText(`${refLabel(b)}  ${beatPlain(b)}`); card.classList.add("flash"); setTimeout(() => card.classList.remove("flash"), 700);
+          });
           step.appendChild(card); noteCol.appendChild(step);
         });
         const steps = $$(".note-step");
@@ -388,7 +399,9 @@
         }
 
         // ---------- active beat tracking ----------
-        let cur = -1, programmatic = false, pTimer = 0;
+        let cur = -1, programmatic = false, pTimer = 0, backTo = -1, backOn = -1;   // ONE back-link: return to beat backTo; its chip shows only on landing card backOn
+        const backChip = document.createElement("button"); backChip.className = "back-chip";
+        backChip.addEventListener("click", (e) => { e.stopPropagation(); goBack(); });   // stop bubbling so the host card doesn't also copy
         function nearestStep() {
           const cy = window.innerHeight * 0.42; let best = 0, bd = Infinity;
           steps.forEach((s, k) => { const r = s.getBoundingClientRect(); const c = (r.top + r.bottom) / 2; const d = Math.abs(c - cy); if (d < bd) { bd = d; best = k; } });
@@ -422,7 +435,7 @@
         function setActive(k) {
           k = Math.max(0, Math.min(beats.length - 1, k));
           const changed = k !== cur; cur = k;
-          steps.forEach((s, i) => s.classList.toggle("active", i === k));
+          steps.forEach((s, i) => { const on = i === k; s.classList.toggle("active", on); cards[i].title = on ? "click to copy this step" : "click to focus this step"; });
           const beat = beats[k];
           const nums = parseLines(beat.dataset.lines);
           const focus = beat.dataset.to ? [...nums, ...parseLines(beat.dataset.to)] : nums;
@@ -432,9 +445,21 @@
           $("#count").textContent = `${k + 1} / ${beats.length}`;
           $("#prev").disabled = k === 0; $("#next").disabled = k === beats.length - 1;
           $$("#progress .dot").forEach((d, i) => { d.classList.toggle("current", i === k); d.classList.toggle("done", i < k); });
+          updateBackBtn();   // keep the "↩ back" chip on whatever card is now focused
         }
         function reposition() { if (cur >= 0) drawScene(cur, false); }
-        function jumpTo(k) { programmatic = true; clearTimeout(pTimer); pTimer = setTimeout(() => (programmatic = false), 680); setActive(k); cards[k].scrollIntoView({ block: "center", behavior: "smooth" }); }
+        function jumpTo(k, record = true) {
+          k = Math.max(0, Math.min(beats.length - 1, k));
+          if (record && cur >= 0 && k !== cur) { backTo = cur; backOn = k; }   // a jump (not sequential ◀ ▶) sets THE back-link; a later jump replaces it, so it never accumulates
+          programmatic = true; clearTimeout(pTimer); pTimer = setTimeout(() => (programmatic = false), 680); setActive(k); cards[k].scrollIntoView({ block: "center", behavior: "smooth" });
+        }
+        function goBack() { if (backTo < 0) return; const o = backTo; backTo = backOn = -1; jumpTo(o, false); }
+        // the "↩ back" chip shows on EXACTLY one card — the landing card of the most recent jump — labelled by the origin's line, matching the ↗ jump chips
+        function updateBackBtn() {
+          if (backTo < 0 || cur !== backOn) { backChip.remove(); return; }
+          backChip.textContent = "↩ back to L" + parseLines(beats[backTo].dataset.lines)[0];
+          if (cards[cur] && backChip.parentElement !== cards[cur]) cards[cur].appendChild(backChip);   // bottom of the note, below its ↗ chips
+        }
         // jump to whatever beat owns line n (the clean case); if no beat focuses it, peek the line and flash it
         function jumpToLine(n) {
           let k = beats.findIndex((b) => parseLines(b.dataset.lines).includes(n));
@@ -467,12 +492,12 @@
         let rzt; window.addEventListener("resize", () => { clearTimeout(rzt); rzt = setTimeout(() => { lastKey = ""; if (cur >= 0) centerCode(beats[cur]); reposition(); }, 120); });
 
         // ---------- controls ----------
-        $("#prev").addEventListener("click", () => jumpTo(cur - 1));
-        $("#next").addEventListener("click", () => jumpTo(cur + 1));
+        $("#prev").addEventListener("click", () => jumpTo(cur - 1, false));
+        $("#next").addEventListener("click", () => jumpTo(cur + 1, false));
         $$(".line").forEach((l) => { l.addEventListener("click", () => { const ln = parseInt(l.dataset.ln, 10); const k = beats.findIndex((b) => parseLines(b.dataset.lines).includes(ln)); if (k >= 0) jumpTo(k); }); });
         document.addEventListener("keydown", (e) => {
-          if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); jumpTo(cur + 1); }
-          else if (e.key === "ArrowLeft") { e.preventDefault(); jumpTo(cur - 1); }
+          if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); jumpTo(cur + 1, false); }
+          else if (e.key === "ArrowLeft") { e.preventDefault(); jumpTo(cur - 1, false); }
           else if (e.key === "Home") jumpTo(0);
           else if (e.key === "End") jumpTo(beats.length - 1);
         });

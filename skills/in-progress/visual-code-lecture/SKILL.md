@@ -94,6 +94,8 @@ The hand-drawn look is **rough.js v4.6.6 embedded inline** (the same library Exc
 
 Save to `/tmp/<project-slug>-visual-code-lecture.html`. Slug = `basename $PWD` lower-cased, non-alphanumeric → `-`, collapsed; fall back to `code` if empty.
 
+**Desktop-only by design.** The page is a `/tmp` artifact opened on the same desktop that runs Claude Code, and the pinned two-column layout (code left, notes right, connector across the gutter) assumes a wide viewport — don't add mobile breakpoints. Revisit only if the workflow ever shares or embeds these pages.
+
 Fill the regions (each is a comment in the template):
 
 1. **Title + subject** — `[data-title]` and `[data-subject]` (the file / function / subsystem).

@@ -31,6 +31,18 @@ Sub-actions are determined by the user's words:
 
 If `/time-tracking` is invoked with no further input, default to `status`. After showing status, list the available sub-actions so the user can pick.
 
+## Asking questions
+
+For any step that picks among a fixed set of choices, use the **AskUserQuestion** tool instead of printing the options as text — so the user selects or presses a number rather than typing the answer. This covers the §"Session conflict subflow" and §"Stale-session subflow", the "which session?" pickers in `end` / `pause` / `resume` / `discard`, and "Mark all as invoiced?".
+
+The lettered blocks in this spec are the option *content*, not a literal prompt: map each letter to one AskUserQuestion option (label = the short choice, description = what it does), keep the order, and put any context the user needs to decide (elapsed time, conflicting sessions) in the question text.
+
+Two carve-outs stay as typed prompts:
+- **Free-text input** — the `end` combined prompt (category %, shipped / slipped lines) and any `HH:MM` / date entry can't be enumerated.
+- **Destructive `(y/N)` confirmations** — `discard` and the stale (c) "폐기" branch keep the typed `(y/N)` gate; the friction is deliberate for an irreversible delete.
+
+If AskUserQuestion isn't available in the current context, fall back to printing the lettered block and waiting for a typed reply.
+
 ## Sub-action: `start`
 
 1. **Capture start time**: run `date -u +"%Y-%m-%dT%H:%M:%SZ"` for UTC ISO, then `date +"%H:%M %Z"` for local display. Read system timezone via `date +%Z` and full TZ name via `readlink /etc/localtime | sed 's|.*/zoneinfo/||'` (macOS/Linux). Don't ask the user — read it.

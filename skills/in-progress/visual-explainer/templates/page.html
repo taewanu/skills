@@ -405,14 +405,21 @@
         if (el.matches(".callout")) return "> " + tidy(el);
         if (el.matches(".grid2")) {
           return [...el.children].map((pane) => {
-            const tag = tidy(pane.querySelector(".tag"));
-            const h = tidy(pane.querySelector("h3")) || tag;
-            const ps = [...pane.querySelectorAll("p")].map((p) => tidy(p)).filter(Boolean);
+            const tag = tidy(pane.querySelector(":scope > .tag"));
+            if (pane.matches(".card")) {
+              // a wrapper holding sub-blocks (flow, timeline, table): recurse so their content isn't dropped
+              const inner = [...pane.children].filter((c) => !c.matches(".tag")).map(blockToMd).filter(Boolean).join("\n\n");
+              return (tag ? `**${tag}**\n` : "") + inner;
+            }
+            const h = tidy(pane.querySelector(":scope > h3")) || tag;
+            const ps = [...pane.querySelectorAll(":scope > p")].map((p) => tidy(p)).filter(Boolean);
             return `**${h}**${tag && tag !== h ? ` _(${tag})_` : ""}\n` + ps.map((p) => "- " + p).join("\n");
           }).join("\n\n");
         }
         if (el.matches(".flow")) {
-          return [...el.querySelectorAll(".node")].map((n) => tidy(n)).join(" → ");
+          return [...el.querySelectorAll(".node")].map((n) =>
+            [...n.childNodes].map((c) => (c.textContent || "").replace(/\s+/g, " ").trim()).filter(Boolean).join(" ")
+          ).join(" → ");
         }
         if (el.matches(".timeline")) {
           return [...el.querySelectorAll(".track")].map((t) => {

@@ -3,21 +3,21 @@
   visual-code-review page template. One self-contained file; both modes fill it.
   Fill these regions before opening:
     1. <title>, [data-title], and the .summary-block (a one-line [data-summary] + bullets)
-    2. .bar-meta — the diffstat / branch-or-range stats shown above the toolbar
-    3. <nav class="nav"> — one <a> per file (review) or per section (explain)
-    4. CONTENT marker — diff .file blocks with anchored .note callouts (review),
+    2. .bar-meta: the diffstat / branch-or-range stats shown above the toolbar
+    3. <nav class="nav">: one <a> per file (review) or per section (explain)
+    4. CONTENT marker: diff .file blocks with anchored .note callouts (review),
        or .section blocks with a diagram + annotated .snippet (explain)
-    5. DIAGRAM marker — inline SVG/HTML flow, when a picture beats prose
-    6. GOTCHAS marker — gotchas / open questions
+    5. DIAGRAM marker: inline SVG/HTML flow, when a picture beats prose
+    6. GOTCHAS marker: gotchas / open questions
   See the commented authoring stub at the bottom for the exact shapes to copy.
-  Mechanics — sticky toolbar (file-list collapse · Unified/Split · Wrap · Whitespace · Theme),
-  split-view builder, click-to-copy notes + summary — are solved; copy the style + script blocks verbatim.
+  Mechanics (sticky toolbar (file-list collapse · Unified/Split · Wrap · Whitespace · Theme),
+  split-view builder, click-to-copy notes + summary) are solved; copy the style + script blocks verbatim.
 -->
 <html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>__TITLE__ — visual code review</title>
+    <title>__TITLE__: visual code review</title>
     <style>
       :root,
       [data-theme="dark"] {
@@ -216,8 +216,8 @@
       <div class="summary-block">
         <p class="subtitle"><span data-summary>__ONE-LINE SUMMARY OF THE CHANGE / SUBJECT__</span></p>
         <ul class="summary-points">
-          <li>__key point — what the change does / what to look at__</li>
-          <li>__another point — the shape of the change, or the subsystem's spine__</li>
+          <li>__key point: what the change does / what to look at__</li>
+          <li>__another point: the shape of the change, or the subsystem's spine__</li>
         </ul>
         <span class="summary-copy" aria-hidden="true"></span>
       </div>
@@ -275,7 +275,7 @@
           <div class="block-body" style="padding:0">
             <div class="note question" data-annot data-group="General">Does the retry path double-count metrics? Couldn't tell from the diff.</div>
           </div>
-          <p class="skipped">Skipped: generated / lockfiles, *.snap — not reviewed.</p>
+          <p class="skipped">Skipped: generated / lockfiles, *.snap (not reviewed).</p>
         </section>
         -->
       </main>
@@ -284,9 +284,9 @@
     <!--
       ============================ AUTHORING STUBS ============================
       Copy these shapes into the regions above. Delete what you don't use.
-      NOTE: code/diff text is literal — HTML-escape it: &lt; &gt; &amp; (in source: &amp;lt; &amp;gt; &amp;amp;).
+      NOTE: code/diff text is literal; HTML-escape it: &lt; &gt; &amp; (in source: &amp;lt; &amp;gt; &amp;amp;).
 
-      REVIEW MODE — a collapsible file with one hunk and two anchored notes.
+      REVIEW MODE: a collapsible file with one hunk and two anchored notes.
       Each .note is click-to-copy (a corner icon appears on hover; the whole note is the
       target). data-group records which file/section the note belongs to. The line ref is
       written inline so it travels into the copied text.
@@ -315,7 +315,7 @@
         </div>
       </details>
 
-      EXPLAIN MODE — a section with prose, a diagram, and an annotated snippet:
+      EXPLAIN MODE: a section with prose, a diagram, and an annotated snippet:
 
       <section class="section" id="s-flow">
         <div class="section-head"><h2>Token bucket flow</h2></div>

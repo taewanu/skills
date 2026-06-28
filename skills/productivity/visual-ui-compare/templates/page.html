@@ -2,17 +2,17 @@
 <!--
   visual-ui-compare page template.
   Fill in three regions before opening:
-    1. the TOKENS marker — paste the project's token block (both themes; derive the missing one if needed)
-    2. <title> and <h1> + <p> in <header class="page"> — name the comparison + variable
-    3. the CELLS marker — one .variant block per cell; see the comment-stub at the bottom
+    1. the TOKENS marker: paste the project's token block (both themes; derive the missing one if needed)
+    2. <title> and <h1> + <p> in <header class="page">: name the comparison + variable
+    3. the CELLS marker: one .variant block per cell; see the comment-stub at the bottom
 -->
 <html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>__PROJECT__ — visual compare</title>
+    <title>__PROJECT__: visual compare</title>
     <style>
-      /* ===== Base color fallbacks — a project token block pasted below overrides these ===== */
+      /* ===== Base color fallbacks: a project token block pasted below overrides these ===== */
       :root {
         --color-void: #0a0a0a;
         --color-night: #161616;
@@ -22,7 +22,7 @@
         --color-fg-3: #8a8a8a;
         --color-sunrise: #ff6b47;
         --color-aurora: #6be5c5;
-        /* single highlight seam — map this to the project's accent and every highlight follows */
+        /* single highlight seam: map this to the project's accent and every highlight follows */
         --accent: var(--color-aurora, #6be5c5);
         --accent-ink: #0a0a0a;
       }
@@ -30,7 +30,7 @@
       /* ===== TOKENS (paste from project; both themes) ===== */
       <!-- TOKENS -->
 
-      /* Fallback structural tokens — override above if the project defines them */
+      /* Fallback structural tokens: override above if the project defines them */
       :root {
         --hairline: rgba(127, 127, 127, 0.12);
         --hairline-strong: rgba(127, 127, 127, 0.22);
@@ -206,18 +206,18 @@
         <div class="grid" style="--cells: 3">
           <!-- CELLS -->
           <!--
-            Cell stub — copy once per variant:
+            Cell stub. Copy once per variant:
 
             <div class="variant">
               <div class="variant-header">
-                <span class="variant-label">A — --token-name (value) <span class="current">— current</span></span>
+                <span class="variant-label">A: --token-name (value) <span class="current">(current)</span></span>
                 <button type="button" class="pick-btn"
-                        data-pick="A — --token-name (value) [current]">Pick this</button>
+                        data-pick="A: --token-name (value) [current]">Pick this</button>
               </div>
               optional .variant-tradeoff line, only when non-obvious:
               <div class="variant-tradeoff">trade-off note (e.g. bigger touch target, eats 8px vertical)</div>
 
-              actual content under test — same across all cells, only the variable differs
+              actual content under test: same across all cells, only the variable differs
             </div>
           -->
         </div>

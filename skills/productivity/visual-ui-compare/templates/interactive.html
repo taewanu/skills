@@ -1,23 +1,23 @@
 <!DOCTYPE html>
 <!--
-  visual-ui-compare INTERACTIVE template — for motion / continuous-range decisions
+  visual-ui-compare INTERACTIVE template: for motion / continuous-range decisions
   a static cell can't carry. Fill these regions before opening:
-    1. the TOKENS marker (in the style block) — paste the project's token block, both themes
-    2. <title> and <h1> + <p> in <header class="page"> — name the decision + variable
-    3. #preview — the element under test, driven by the CSS vars the controls set
-    4. .controls — one .control per variable (slider for numerics, select for presets)
+    1. the TOKENS marker (in the style block): paste the project's token block, both themes
+    2. <title> and <h1> + <p> in <header class="page">: name the decision + variable
+    3. #preview: the element under test, driven by the CSS vars the controls set
+    4. .controls: one .control per variable (slider for numerics, select for presets)
   The example below (a "pop" animation with duration / easing / scale) is just a
-  reference for the wiring — REPLACE it with the real preview + controls.
+  reference for the wiring; REPLACE it with the real preview + controls.
   Mechanics (theme + viewport toggle, control→var binding, play/replay, copy) are
-  solved — copy them verbatim; the chrome and which controls you expose are yours.
+  solved: copy them verbatim; the chrome and which controls you expose are yours.
 -->
 <html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>__PROJECT__ — interactive tune</title>
+    <title>__PROJECT__: interactive tune</title>
     <style>
-      /* ===== Base color fallbacks — a project token block pasted below overrides these ===== */
+      /* ===== Base color fallbacks: a project token block pasted below overrides these ===== */
       :root {
         --color-void: #0a0a0a;
         --color-night: #161616;
@@ -27,7 +27,7 @@
         --color-fg-3: #8a8a8a;
         --color-sunrise: #ff6b47;
         --color-aurora: #6be5c5;
-        /* single highlight seam — map this to the project's accent and every highlight follows */
+        /* single highlight seam: map this to the project's accent and every highlight follows */
         --accent: var(--color-aurora, #6be5c5);
         --accent-ink: #0a0a0a;
       }
@@ -117,7 +117,7 @@
       .btn.copied { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
       .values { font-family: ui-monospace, monospace; font-size: var(--text-micro); color: var(--color-fg-3); }
 
-      /* ===== EXAMPLE preview — replace with the real element under test ===== */
+      /* ===== EXAMPLE preview: replace with the real element under test ===== */
       #preview {
         --motion-duration: 240ms;
         --motion-ease: cubic-bezier(0.2, 0, 0, 1);
@@ -151,7 +151,7 @@
 
     <header class="page">
       <h1>__TITLE__</h1>
-      <p>__SUBTITLE — the variable(s) under test__</p>
+      <p>__SUBTITLE: the variable(s) under test__</p>
     </header>
 
     <div class="viewport-frame" data-vp="full">

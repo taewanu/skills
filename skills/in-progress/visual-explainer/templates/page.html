@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- TITLE: the question the page answers -->
+    <title data-title>Why does X happen? · explainer</title>
+    <style>
+      /* ---- MECHANICS: tokens. Tweak colors freely; keep the names. ---- */
+      :root, [data-theme="dark"] {
+        --bg: #0c0d12;
+        --panel: #15171f;
+        --panel-2: #1c1f2a;
+        --line: #2a2e3c;
+        --text: #e7e9f0;
+        --muted: #9aa0b4;
+        --accent: #6d8bff;
+        --accent-ink: #0c0d12;
+        --ok: #4ade80;
+        --warn: #f2b441;
+        --bad: #ff6b6b;
+        --good-bg: #16241b;
+        --good-line: #25402d;
+        --bad-bg: #221a1a;
+        --bad-line: #3a2730;
+        --radius: 14px;
+      }
+      [data-theme="light"] {
+        --bg: #f6f7fb;
+        --panel: #ffffff;
+        --panel-2: #f0f1f6;
+        --line: #d9dce6;
+        --text: #1a1d27;
+        --muted: #5b6175;
+        --accent: #3b5bdb;
+        --accent-ink: #ffffff;
+        --ok: #1a8f4a;
+        --warn: #b8810a;
+        --bad: #d63b3b;
+        --good-bg: #e8f6ec;
+        --good-line: #bfe3c8;
+        --bad-bg: #fbeaea;
+        --bad-line: #f0c9c9;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        background: radial-gradient(1200px 600px at 50% -10%, color-mix(in srgb, var(--accent) 12%, var(--bg)) 0%, var(--bg) 55%);
+        color: var(--text);
+        font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      .wrap { max-width: 920px; margin: 0 auto; padding: 40px 22px 120px; }
+
+      /* ---- header ---- */
+      header.top { text-align: center; margin-bottom: 14px; }
+      .eyebrow {
+        display: inline-block; font-size: 12px; letter-spacing: 0.14em;
+        text-transform: uppercase; color: var(--muted);
+        border: 1px solid var(--line); border-radius: 999px;
+        padding: 5px 12px; margin-bottom: 18px;
+      }
+      h1 { font-size: clamp(26px, 5vw, 40px); line-height: 1.15; margin: 0 0 10px; }
+      .sub { color: var(--muted); font-size: 16px; max-width: 640px; margin: 0 auto; }
+
+      /* ---- TL;DR / 결론부터 ---- */
+      .tldr {
+        position: relative;
+        margin: 30px 0 40px; padding: 26px;
+        background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, var(--panel)), var(--panel));
+        border: 1px solid var(--line); border-left: 4px solid var(--accent);
+        border-radius: var(--radius);
+      }
+      .tldr .label { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+      .tldr p { margin: 0; font-size: clamp(18px, 3.4vw, 24px); font-weight: 650; line-height: 1.4; }
+      .tldr .small { font-size: 15px; font-weight: 400; color: var(--muted); margin-top: 12px; }
+
+      /* ---- sections ---- */
+      section.step { margin: 46px 0; scroll-margin-top: 24px; }
+      h2 { font-size: 22px; margin: 0 0 6px; display: flex; align-items: center; gap: 10px; }
+      h2 .n {
+        font-size: 13px; color: var(--accent-ink); background: var(--accent);
+        width: 26px; height: 26px; border-radius: 8px;
+        display: inline-grid; place-items: center; font-weight: 700; flex: none;
+      }
+      h2 .title { min-width: 0; }
+      .lead { color: var(--muted); margin: 0 0 20px; }
+
+      .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; }
+      .grid2 { display: grid; gap: 18px; grid-template-columns: 1fr 1fr; }
+      @media (max-width: 720px) { .grid2 { grid-template-columns: 1fr; } }
+
+      /* ---- contrast cards (two walls / before-after / model A vs B) ---- */
+      .pane { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; border-top: 4px solid var(--line); }
+      .pane.warn { border-top-color: var(--warn); }
+      .pane.bad { border-top-color: var(--bad); }
+      .pane.ok { border-top-color: var(--ok); }
+      .pane .tag { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; color: var(--muted); }
+      .pane.warn .tag { color: var(--warn); }
+      .pane.bad .tag { color: var(--bad); }
+      .pane.ok .tag { color: var(--ok); }
+      .pane h3 { margin: 6px 0 10px; font-size: 18px; }
+      .pane p { margin: 0 0 10px; font-size: 15px; }
+      .pane .why { color: var(--muted); font-size: 14px; }
+
+      /* ---- callout (gotcha = bad; good = resolution; unverified = honest hedge) ---- */
+      .callout {
+        margin-top: 18px; padding: 14px 16px; border-radius: 10px;
+        background: var(--bad-bg); border: 1px solid var(--bad-line); font-size: 14px;
+      }
+      .callout.good { background: var(--good-bg); border-color: var(--good-line); }
+      .callout.unverified { background: color-mix(in srgb, var(--warn) 12%, var(--panel)); border-color: color-mix(in srgb, var(--warn) 45%, var(--line)); }
+      .callout b { color: var(--bad); }
+      .callout.good b { color: var(--ok); }
+      .callout.unverified b { color: var(--warn); }
+
+      /* ---- flow / signal path ---- */
+      .flow { display: flex; align-items: stretch; gap: 0; flex-wrap: wrap; }
+      .flow .node {
+        flex: 1 1 0; min-width: 120px; padding: 14px 12px; text-align: center;
+        background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px;
+        font-size: 14px; display: grid; place-items: center; gap: 4px;
+      }
+      .flow .node .ico { font-size: 20px; }
+      .flow .node small { color: var(--muted); font-size: 12px; }
+      .flow .node.dead { border-style: dashed; border-color: var(--bad); background: var(--bad-bg); }
+      .flow .node.ok { border-color: var(--ok); }
+      .flow .arrow { align-self: center; color: var(--muted); padding: 0 8px; font-size: 18px; flex: none; }
+
+      /* ---- timeline (compare two tracks + a validity window) ---- */
+      .timeline .track { margin: 14px 0; }
+      .timeline .track .name { font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 8px; }
+      .timeline .seq { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+      .timeline .ev { padding: 7px 11px; border-radius: 8px; background: var(--panel-2); border: 1px solid var(--line); font-size: 13px; }
+      .timeline .ev small { display: block; color: var(--muted); font-size: 11px; }
+      .timeline .win { display: inline-flex; align-items: center; gap: 8px; padding: 6px; border-radius: 10px; background: color-mix(in srgb, var(--ok) 16%, transparent); border: 1px dashed var(--ok); }
+      .timeline .ev.hit-ok { border-color: var(--ok); color: var(--ok); font-weight: 600; }
+      .timeline .ev.hit-bad { border-color: var(--bad); color: var(--bad); font-weight: 600; }
+
+      /* ---- comparison table (add data-decision for pick-to-chat buttons) ---- */
+      table.cmp { width: 100%; border-collapse: collapse; font-size: 14px; overflow: hidden; border-radius: 10px; }
+      table.cmp th, table.cmp td { text-align: left; padding: 11px 13px; border-bottom: 1px solid var(--line); }
+      table.cmp thead th { background: var(--panel-2); color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+      table.cmp tbody tr:last-child td { border-bottom: none; }
+      table.cmp .opt { font-weight: 650; }
+      table.cmp td.pick, table.cmp th.pick { text-align: center; }
+      table.cmp td.pick button {
+        font: inherit; font-size: 12px; cursor: pointer; padding: 4px 11px; border-radius: 7px;
+        border: 1px solid var(--line); background: var(--panel-2); color: var(--text);
+      }
+      table.cmp td.pick button:hover { border-color: var(--accent); }
+      table.cmp td.pick button.copied { color: var(--ok); border-color: var(--ok); }
+      .chip { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; border: 1px solid var(--line); }
+      .chip.ok { color: var(--ok); border-color: var(--ok); }
+      .chip.bad { color: var(--bad); border-color: var(--bad); }
+      .chip.rec { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+
+      /* ---- coverage line: what you did NOT cover / could not verify ---- */
+      .coverage { margin: 40px 0; padding: 13px 16px; border-radius: 10px; border: 1px dashed var(--line); color: var(--muted); font-size: 13.5px; }
+      .coverage b { color: var(--text); }
+
+      /* ---- glossary ---- */
+      dl.glossary { display: grid; gap: 14px; margin: 0; }
+      dl.glossary dt { font-weight: 650; color: var(--text); }
+      dl.glossary dd { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+
+      code { background: var(--panel-2); border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; font-size: 0.88em; }
+
+      /* ---- MECHANICS: toolbar + per-section/TL;DR copy. Tweak placement, keep the JS hooks. ---- */
+      .toolbar { position: fixed; top: 14px; right: 14px; display: flex; gap: 8px; z-index: 50; }
+      .toolbar button, .copybtn {
+        font: inherit; font-size: 13px; cursor: pointer; color: var(--text);
+        background: var(--panel); border: 1px solid var(--line); border-radius: 9px; padding: 7px 12px;
+      }
+      .toolbar button:hover { border-color: var(--accent); }
+      .toolbar button.copied, .copybtn.copied { color: var(--ok); border-color: var(--ok); }
+      .tldr .copybtn { position: absolute; top: 14px; right: 14px; font-size: 12px; padding: 5px 10px; }
+      h2 .sec-copy {
+        margin-left: auto; opacity: 0; font: inherit; font-size: 12px; cursor: pointer;
+        background: transparent; border: 1px solid var(--line); color: var(--muted);
+        border-radius: 7px; padding: 3px 8px; transition: opacity .12s; flex: none;
+      }
+      section.step:hover h2 .sec-copy { opacity: 1; }
+      h2 .sec-copy:hover { border-color: var(--accent); color: var(--text); }
+      h2 .sec-copy.copied { opacity: 1; color: var(--ok); border-color: var(--ok); }
+
+      /* ---- MECHANICS: auto-built side nav (scrollspy). Hidden when narrow or ≤2 sections. ---- */
+      .toc {
+        position: fixed; left: 14px; top: 84px; width: 172px;
+        max-height: calc(100vh - 120px); overflow: auto;
+        display: flex; flex-direction: column; gap: 2px; z-index: 40;
+      }
+      .toc a {
+        display: flex; gap: 8px; align-items: center; padding: 5px 8px; border-radius: 8px;
+        color: var(--muted); text-decoration: none; font-size: 12.5px; border: 1px solid transparent;
+      }
+      .toc a:hover { color: var(--text); background: var(--panel); }
+      .toc a.active { color: var(--text); background: var(--panel); border-color: var(--line); }
+      .toc .tnum { flex: none; width: 18px; height: 18px; border-radius: 5px; background: var(--panel-2); display: grid; place-items: center; font-size: 11px; font-weight: 700; }
+      .toc a.active .tnum { background: var(--accent); color: var(--accent-ink); }
+      .toc .tlabel { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .toc.hidden { display: none; }
+      @media (max-width: 1180px) { .toc { display: none; } }
+    </style>
+  </head>
+  <body>
+    <div class="toolbar">
+      <button id="themeBtn" title="Toggle theme">🌙 Dark</button>
+      <button id="copyBtn">⧉ Copy as Markdown</button>
+    </div>
+
+    <div class="wrap">
+      <!-- ============ HEADER ============ -->
+      <header class="top">
+        <!-- EYEBROW: where this came from (issue/PR/area). Keep it short. -->
+        <span class="eyebrow">MyApp · explainer</span>
+        <!-- TITLE: the plain-language question -->
+        <h1 data-h1>Why does the thing only break on the slow path?</h1>
+        <p class="sub">Read it here and hand it to a teammate. Self-contained HTML, opens on a double-click.</p>
+      </header>
+
+      <!-- ============ TL;DR: the one line everything hangs off ============ -->
+      <div class="tldr">
+        <div class="label">Bottom line</div>
+        <p>State the whole answer in one sentence here: the single idea every section below is a branch off of.</p>
+        <p class="small">One follow-up sentence: the contrast that makes it click (the fast path does A, the slow path does B, that is the entire difference).</p>
+        <!-- copy-just-the-TL;DR button is injected here by the script -->
+      </div>
+
+      <!-- ============ SECTIONS (auto-numbered, auto-listed in the side nav) ============ -->
+      <!-- Mix the block types below as the explanation needs. Delete what you don't use.
+           Each h2: <span class="n"></span> is filled by JS; put the title in <span class="title">. -->
+
+      <!-- TYPE: contrast. Two independent things readers conflate. -->
+      <section class="step">
+        <h2><span class="n"></span><span class="title">There are two separate problems</span></h2>
+        <p class="lead">They look like one bug. They're not; fix one and the other still bites.</p>
+        <div class="grid2">
+          <div class="pane warn">
+            <div class="tag">Problem A · the gate</div>
+            <h3>"Auto is not the same as asking"</h3>
+            <p>One paragraph on what A is, in plain terms.</p>
+            <p class="why">→ Why it's the root, not a symptom.</p>
+          </div>
+          <div class="pane bad">
+            <div class="tag">Problem B · the dead channel</div>
+            <h3>Even when A passes, B blocks</h3>
+            <p>One paragraph on B.</p>
+            <p class="why">→ Why it's independent of A.</p>
+          </div>
+        </div>
+        <div class="callout"><b>Don't conflate:</b> removing B leaves A standing. To fix the whole thing you have to clear both.</div>
+      </section>
+
+      <!-- TYPE: timeline. When something is called decides the outcome. -->
+      <section class="step">
+        <h2><span class="n"></span><span class="title">Why only the slow path differs: timing</span></h2>
+        <p class="lead">The call is identical. <em>When</em> it fires is not. The system only honors it inside a short window.</p>
+        <div class="card">
+          <div class="timeline">
+            <div class="track">
+              <div class="name">Fast path</div>
+              <div class="seq">
+                <span class="win">
+                  <span class="ev">press<small>window opens</small></span>
+                  <span class="ev hit-ok">act()<small>inside ✅</small></span>
+                </span>
+              </div>
+            </div>
+            <div class="track">
+              <div class="name">Slow path</div>
+              <div class="seq">
+                <span class="win">
+                  <span class="ev">press<small>window opens</small></span>
+                  <span class="ev">release<small>window closes</small></span>
+                </span>
+                <span class="ev hit-bad">act()<small>1–2s later ✗</small></span>
+              </div>
+            </div>
+          </div>
+          <p class="why" style="margin-top:14px">The dashed band is the valid window. The fast path's call lands inside it; the slow path's lands after it closed.</p>
+        </div>
+        <!-- TYPE: unverified callout. An honest hedge, not a claim. Drop it once checked. -->
+        <div class="callout unverified"><b>Unverified:</b> whether the bare path actually fires on a cold device; needs a real-device check before anyone leans on this.</div>
+      </section>
+
+      <!-- TYPE: flow. A signal/data path with a broken node, optionally a fixed twin. -->
+      <section class="step">
+        <h2><span class="n"></span><span class="title">Where it actually dies</span></h2>
+        <p class="lead">Follow the path. One node in the middle swallows the result.</p>
+        <div class="grid2">
+          <div class="card">
+            <div class="tag" style="color:var(--bad);font-size:12px;font-weight:700;text-transform:uppercase">Now · broken</div>
+            <div class="flow" style="margin-top:12px">
+              <div class="node ok"><span class="ico">🟢</span>source<small>works</small></div>
+              <span class="arrow">→</span>
+              <div class="node dead"><span class="ico">💀</span>middle<small>stuck</small></div>
+              <span class="arrow">→</span>
+              <div class="node"><span class="ico">📢</span>output<small>nothing</small></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="tag" style="color:var(--ok);font-size:12px;font-weight:700;text-transform:uppercase">Fixed · bypass</div>
+            <div class="flow" style="margin-top:12px">
+              <div class="node ok"><span class="ico">🟢</span>source<small>works</small></div>
+              <span class="arrow">→</span>
+              <div class="node ok"><span class="ico">📢</span>output<small>direct</small></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TYPE: table. Options scored across dimensions; data-decision adds pick-to-chat buttons. -->
+      <section class="step">
+        <h2><span class="n"></span><span class="title">The decision it forces</span></h2>
+        <p class="lead">What you pick isn't a workaround; it's a product model. Here's the fork.</p>
+        <div class="card" style="padding:0;overflow:hidden">
+          <table class="cmp" data-decision>
+            <thead>
+              <tr><th>Model</th><th>Slow-path auto</th><th>Effort</th><th>Verdict</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="opt">Model 1 · explicit</td>
+                <td><span class="chip bad">dropped</span></td>
+                <td>low</td>
+                <td><span class="chip rec">recommended</span></td>
+              </tr>
+              <tr>
+                <td class="opt">Model 2 · automatic</td>
+                <td><span class="chip ok">works</span></td>
+                <td>high + device QA</td>
+                <td><span class="chip">alternative</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout good"><b>Why Model 1:</b> one sentence on what evaporates if you pick it: both problems above, gone, for the cost of one feature.</div>
+      </section>
+
+      <!-- TYPE: prose. Plain section, just a card of text. -->
+      <section class="step">
+        <h2><span class="n"></span><span class="title">"Why now? it used to work"</span></h2>
+        <p class="lead">Nothing in the core changed. The trigger moved.</p>
+        <div class="card">
+          <p style="margin-top:0">Two tight paragraphs are fine here. Lead each with its point. The lesson, if there is one, goes last in its own line.</p>
+          <p class="why">Lesson: state the transferable rule, not the incident.</p>
+        </div>
+      </section>
+
+      <!-- ============ COVERAGE: name what you left out / couldn't verify (delete if you covered it all) ============ -->
+      <div class="coverage"><b>Scope:</b> covers the root cause and the decision fork; leaves out the desktop path (unaffected) and the real-device QA for the flagged unverified case above.</div>
+
+      <!-- ============ GLOSSARY ============ -->
+      <section class="step">
+        <h2><span class="n"></span><span class="title">Glossary</span></h2>
+        <p class="lead">Plain definitions for the terms this page leans on.</p>
+        <div class="card">
+          <dl class="glossary">
+            <dt>Term one</dt>
+            <dd>One-sentence plain definition. No jargon the reader hasn't met yet.</dd>
+            <dt>Term two</dt>
+            <dd>Define it the way you'd say it out loud.</dd>
+          </dl>
+        </div>
+      </section>
+    </div>
+
+    <!-- ================= MECHANICS: copy verbatim ================= -->
+    <script>
+      const steps = [...document.querySelectorAll("section.step")];
+      const tidy = (el) => (el ? el.textContent.replace(/\s+/g, " ").trim() : "");
+
+      // ---- shared clipboard helper (clipboard API + execCommand fallback + flash) ----
+      async function copyText(str, btn, copiedLabel) {
+        try {
+          await navigator.clipboard.writeText(str);
+        } catch (e) {
+          const ta = document.createElement("textarea");
+          ta.value = str; document.body.appendChild(ta); ta.select();
+          try { document.execCommand("copy"); } catch (_) {}
+          document.body.removeChild(ta);
+        }
+        if (btn) {
+          const old = btn.textContent;
+          btn.classList.add("copied");
+          if (copiedLabel != null) btn.textContent = copiedLabel;
+          setTimeout(() => { btn.classList.remove("copied"); if (copiedLabel != null) btn.textContent = old; }, 1500);
+        }
+      }
+
+      // ---- markdown serialization (shared by global + per-section copy) ----
+      function tableToMd(table) {
+        const rows = [...table.rows].map((r) =>
+          [...r.cells].filter((c) => !c.classList.contains("pick")).map((c) => tidy(c)));
+        if (!rows.length) return "";
+        const head = "| " + rows[0].join(" | ") + " |";
+        const sep = "| " + rows[0].map(() => "---").join(" | ") + " |";
+        const body = rows.slice(1).map((r) => "| " + r.join(" | ") + " |");
+        return [head, sep, ...body].join("\n");
+      }
+      function blockToMd(el) {
+        if (el.matches("table.cmp")) return tableToMd(el);
+        if (el.matches(".callout")) return "> " + tidy(el);
+        if (el.matches(".grid2")) {
+          return [...el.children].map((pane) => {
+            const tag = tidy(pane.querySelector(".tag"));
+            const h = tidy(pane.querySelector("h3")) || tag;
+            const ps = [...pane.querySelectorAll("p")].map((p) => tidy(p)).filter(Boolean);
+            return `**${h}**${tag && tag !== h ? ` _(${tag})_` : ""}\n` + ps.map((p) => "- " + p).join("\n");
+          }).join("\n\n");
+        }
+        if (el.matches(".flow")) {
+          return [...el.querySelectorAll(".node")].map((n) => tidy(n)).join(" → ");
+        }
+        if (el.matches(".timeline")) {
+          return [...el.querySelectorAll(".track")].map((t) => {
+            const name = tidy(t.querySelector(".name"));
+            const evs = [...t.querySelectorAll(".ev")].map((e) => tidy(e)).join(" → ");
+            return `- **${name}:** ${evs}`;
+          }).join("\n");
+        }
+        if (el.matches("dl.glossary")) {
+          return [...el.children].reduce((acc, node) => {
+            if (node.tagName === "DT") acc.push("**" + tidy(node) + "**: ");
+            else if (node.tagName === "DD") acc[acc.length - 1] += tidy(node);
+            return acc;
+          }, []).map((l) => "- " + l).join("\n");
+        }
+        if (el.matches(".card")) return [...el.children].map(blockToMd).filter(Boolean).join("\n\n");
+        if (el.matches("p")) return tidy(el);
+        return tidy(el);
+      }
+      function sectionToMd(s, i) {
+        const out = [];
+        const title = tidy(s.querySelector("h2 .title")) || tidy(s.querySelector("h2")).replace(/^\d+\s*/, "");
+        out.push("## " + (i + 1) + ". " + title);
+        const lead = tidy(s.querySelector(".lead")); if (lead) out.push(lead);
+        [...s.children].forEach((child) => {
+          if (child.matches("h2, .lead")) return;
+          const md = blockToMd(child); if (md) out.push(md);
+        });
+        return out.join("\n\n");
+      }
+      function pageToMd() {
+        const out = [];
+        out.push("# " + tidy(document.querySelector("[data-h1]")));
+        const sub = tidy(document.querySelector(".sub")); if (sub) out.push("_" + sub + "_");
+        const tl = document.querySelector(".tldr");
+        if (tl) out.push("> **Bottom line:** " + [...tl.querySelectorAll("p")].map(tidy).join(" "));
+        steps.forEach((s, i) => out.push(sectionToMd(s, i)));
+        const cov = document.querySelector(".coverage");
+        if (cov) out.push("> _" + tidy(cov) + "_");
+        return out.join("\n\n");
+      }
+
+      // ---- 1) auto-number sections + add a per-section copy button ----
+      steps.forEach((s, i) => {
+        const n = s.querySelector("h2 .n"); if (n) n.textContent = i + 1;
+        const h2 = s.querySelector("h2");
+        if (h2) {
+          const b = document.createElement("button");
+          b.className = "sec-copy"; b.textContent = "⧉ section"; b.title = "Copy this section as Markdown";
+          b.addEventListener("click", () => copyText(sectionToMd(s, i), b, "✓"));
+          h2.appendChild(b);
+        }
+      });
+
+      // ---- 2) TL;DR-only copy button (the forwardable one-liner) ----
+      const tldr = document.querySelector(".tldr");
+      if (tldr) {
+        const b = document.createElement("button");
+        b.className = "copybtn"; b.textContent = "⧉ TL;DR";
+        b.addEventListener("click", () => copyText([...tldr.querySelectorAll("p")].map(tidy).join(" "), b, "✓"));
+        tldr.appendChild(b);
+      }
+
+      // ---- 3) side nav (scrollspy), auto-built; hidden when ≤2 sections ----
+      const toc = document.createElement("nav"); toc.className = "toc";
+      const links = steps.map((s, i) => {
+        s.id = "sec" + i;
+        const a = document.createElement("a"); a.href = "#sec" + i;
+        const num = document.createElement("span"); num.className = "tnum"; num.textContent = i + 1;
+        const lab = document.createElement("span"); lab.className = "tlabel";
+        lab.textContent = tidy(s.querySelector("h2 .title"));
+        a.append(num, lab); toc.appendChild(a);
+        return a;
+      });
+      if (steps.length <= 2) toc.classList.add("hidden");
+      document.body.appendChild(toc);
+      const spy = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+          if (!e.isIntersecting) return;
+          const i = steps.indexOf(e.target);
+          links.forEach((l, j) => l.classList.toggle("active", j === i));
+        });
+      }, { rootMargin: "-40% 0px -55% 0px" });
+      steps.forEach((s) => spy.observe(s));
+
+      // ---- 4) decision tables: inject pick-to-chat buttons ----
+      document.querySelectorAll("table.cmp[data-decision]").forEach((tb) => {
+        const head = tb.querySelector("thead tr");
+        if (head) { const th = document.createElement("th"); th.className = "pick"; th.textContent = "Pick"; head.appendChild(th); }
+        tb.querySelectorAll("tbody tr").forEach((tr) => {
+          const opt = tidy(tr.querySelector(".opt") || tr.cells[0]);
+          const td = document.createElement("td"); td.className = "pick";
+          const b = document.createElement("button"); b.textContent = "이걸로";
+          b.addEventListener("click", () =>
+            copyText("decision: " + opt + " @ theme=" + document.documentElement.getAttribute("data-theme"), b, "✓"));
+          td.appendChild(b); tr.appendChild(td);
+        });
+      });
+
+      // ---- 5) theme toggle, persisted ----
+      const html = document.documentElement, themeBtn = document.getElementById("themeBtn");
+      const KEY = "visual-explainer-theme";
+      const apply = (t) => { html.setAttribute("data-theme", t); themeBtn.textContent = t === "dark" ? "🌙 Dark" : "☀ Light"; };
+      try { const saved = localStorage.getItem(KEY); if (saved) apply(saved); } catch (e) {}
+      themeBtn.addEventListener("click", () => {
+        const t = html.getAttribute("data-theme") === "dark" ? "light" : "dark";
+        apply(t); try { localStorage.setItem(KEY, t); } catch (e) {}
+      });
+
+      // ---- 6) global: copy the whole explainer as Markdown ----
+      document.getElementById("copyBtn").addEventListener("click", (e) =>
+        copyText(pageToMd(), e.currentTarget, "✓ Copied"));
+    </script>
+  </body>
+</html>

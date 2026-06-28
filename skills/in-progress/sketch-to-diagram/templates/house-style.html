@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>sketch → diagram · locked house style v0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  /* LOCKED HOUSE STYLE v0 — the skill's fixed aesthetic asset.
+     Agents fill structure (IR → coordinates) only; never these values. */
+  :root{ --ink:#2c2a27; --teal:#2e6e6a; --teal-soft:#5a8a86; --amber:#9a6b1f; --amber-soft:#b08a4a; --paper:#f6f1e7; }
+  html,body{ margin:0; height:100%; }
+  body{
+    background:var(--paper);
+    background-image:
+      radial-gradient(circle at 18% 12%, rgba(0,0,0,.018), transparent 60%),
+      repeating-linear-gradient(transparent, transparent 31px, rgba(70,60,40,.05) 32px);
+    display:flex; align-items:center; justify-content:center; min-height:100%;
+    font-family:'Caveat','Marker Felt','Comic Sans MS',cursive; color:var(--ink);
+    padding:24px; box-sizing:border-box;
+  }
+  figure{ margin:0; width:min(960px,100%); }
+  svg{ width:100%; height:auto; display:block; }
+  figcaption{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px;
+    color:#9a9384; text-align:center; margin-top:8px; letter-spacing:.02em; }
+  .hand{ font-family:'Caveat','Marker Felt','Comic Sans MS',cursive; }
+  .node-label{ font-size:27px; fill:var(--ink); }
+  .span-label{ font-size:22px; } .span-note{ font-size:15px; }
+  .teal{ fill:var(--teal); } .teal-soft{ fill:var(--teal-soft); }
+  .amber{ fill:var(--amber); } .amber-soft{ fill:var(--amber-soft); }
+</style>
+</head>
+<body>
+<figure>
+  <svg viewBox="0 0 960 360" role="img" aria-label="stepA to stepB to stepC to remote; an outer watchdog wraps stepC through remote, with a nested inner stall timeout">
+    <defs>
+      <filter id="rough" x="-6%" y="-6%" width="112%" height="112%">
+        <feTurbulence type="turbulence" baseFrequency="0.018" numOctaves="2" seed="7" result="n"/>
+        <feDisplacementMap in="SourceGraphic" in2="n" scale="3.2" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+    </defs>
+
+    <g filter="url(#rough)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <g stroke="var(--ink)" stroke-width="2.4">
+        <rect x="80"  y="64" width="110" height="56" rx="9" fill="#fdfbf4"/>
+        <rect x="270" y="64" width="110" height="56" rx="9" fill="#fdfbf4"/>
+        <rect x="470" y="64" width="160" height="56" rx="9" fill="#fdfbf4"/>
+        <rect x="720" y="64" width="140" height="56" rx="9" fill="#fdfbf4"/>
+      </g>
+      <g stroke="var(--ink)" stroke-width="2.4">
+        <path d="M190 92 L270 92 M270 92 L258 86 M270 92 L258 98"/>
+        <path d="M380 92 L470 92 M470 92 L458 86 M470 92 L458 98"/>
+        <path d="M630 92 L720 92 M720 92 L708 86 M720 92 L708 98"/>
+      </g>
+      <!-- outer: watchdog span, stepC -> remote -->
+      <path d="M470 130 L470 150 L860 150 L860 130" stroke="var(--teal)" stroke-width="2.6"/>
+      <!-- inner: stall timeout, nested -->
+      <path d="M470 235 L470 255 L860 255 L860 235" stroke="var(--amber)" stroke-width="2.6"/>
+    </g>
+
+    <g class="hand" text-anchor="middle">
+      <text class="node-label" x="135" y="98">stepA</text>
+      <text class="node-label" x="325" y="98">stepB</text>
+      <text class="node-label" x="550" y="98">stepC</text>
+      <text class="node-label" x="790" y="98">remote</text>
+
+      <text class="span-label teal"      x="665" y="174">outer watchdog · 60s</text>
+      <text class="span-note  teal-soft" x="665" y="194">broad backstop: a hung step fails over to the next tick</text>
+
+      <text class="span-label amber"      x="665" y="279">inner stall timeout · 5s</text>
+      <text class="span-note  amber-soft" x="665" y="299">the nested remote op self-aborts on a stall</text>
+    </g>
+  </svg>
+  <figcaption>locked house style v0 · sketch-to-diagram</figcaption>
+</figure>
+</body>
+</html>

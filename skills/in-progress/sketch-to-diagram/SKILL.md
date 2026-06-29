@@ -85,7 +85,7 @@ The faithfulness invariant, and the boundary the prototype exposed.
 
 - Warm paper background with faint ruled lines (not dots).
 - Hand-drawn wobble from an inline SVG displacement filter, no external JS or CDN.
-- Font stack `'Caveat','Marker Felt','Comic Sans MS',cursive` so it renders hand-drawn online and falls back offline; label text is never run through the filter, so it stays crisp.
+- Font stack `'Caveat','Marker Felt','Comic Sans MS',cursive`, with Caveat embedded as a base64 woff2 (SIL OFL 1.1) so the hand-drawn look needs no network; the system fonts only stand in if the embed fails to load. Label text is never run through the filter, so it stays crisp.
 - Muted two-tone palette for coverage layers (teal outer, amber inner), not primary red/blue.
 - No oversized title; a tight composition; bracket spans snap to node edges.
 

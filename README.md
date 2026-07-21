@@ -2,6 +2,19 @@
 
 Personal Claude Code skills I use for freelance and product engineering work.
 
+## Install
+
+As a Claude Code plugin, inside Claude Code:
+
+```
+/plugin marketplace add taewanu/skills
+/plugin install taewanu-skills@taewanu
+```
+
+The plugin ships the Engineering and Productivity skills below and follows `main`, so every push reaches installed users.
+
+To work on the skills instead, clone the repo and run `scripts/link-skills.sh`. It symlinks every skill (including `in-progress/`) into `~/.claude/skills` and `~/.agents/skills`, so an edit here is live immediately and `git pull` is the whole update story.
+
 ## Engineering
 
 Skills for code and product work.

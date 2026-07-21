@@ -1,0 +1,23 @@
+{
+  "name": "taewanu-skills",
+  "description": "Personal Claude Code skills for freelance and product engineering work — visual decision pages, perspective-shifting reviews, and work-session tracking.",
+  "author": {
+    "name": "Taewan Lim",
+    "url": "https://twlim.dev"
+  },
+  "homepage": "https://github.com/taewanu/skills",
+  "repository": "https://github.com/taewanu/skills",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "html",
+    "ux-review",
+    "time-tracking",
+    "productivity"
+  ],
+  "skills": [
+    "./skills/engineering/step-back-as-user",
+    "./skills/productivity/time-tracking",
+    "./skills/productivity/visual-ui-compare"
+  ]
+}

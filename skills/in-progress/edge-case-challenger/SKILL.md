@@ -22,21 +22,21 @@ A bare "is this okay?" or "review my approach" is cold. You are ready only when 
 
 - **The decision, as one claim:** "one request per track", "we cache for 60s", "this job runs nightly", "the source can only return one id at a time". Name the quantity or the assumed limit inside it.
 - **Where the claim came from:** the doc line, the recon note, the ADR, the "we've always done it this way". Note its date.
-- **What made it feel settled:** it passed a review? it's been running for months? a benchmark blessed it? Name the axis it was blessed on (accuracy, correctness, latency) — that axis is exactly the one that now masks the others.
+- **What made it feel settled:** it passed a review? it's been running for months? a benchmark blessed it? Name the axis it was blessed on (accuracy, correctness, latency); that axis is exactly the one that now masks the others.
 - **The scale it runs at now, and any scale it's about to run at:** the second number is where most of these break.
 
-If the conversation already established these, proceed. If cold, ask for them in one batched message and stop there: run zero probes. Never probe a blank claim — you'll produce a generic risk list, which is the failure mode.
+If the conversation already established these, proceed. If cold, ask for them in one batched message and stop there: run zero probes. Never probe a blank claim: you'll produce a generic risk list, the failure mode.
 
 ## The probe library
 
 Apply at least 5. Aim every probe at the QUANTITY or the ASSUMED LIMIT inside the decision, not at the code around it. A probe aimed at "is the function correct" produces a correctness nit; a probe aimed at "why is this quantity one" produces a real challenge. Pick the probes that bite; each one that bites becomes a finding.
 
-1. **Probe the ceiling (MANDATORY at least once):** the decision assumes a limit ("one per request", "max 100", "singular id"). Was that limit ever *measured*, or read once from a doc and assumed? The memory rule covers the other direction — a claim that a source *can't* do X needs a real probe. This is the mirror: a claim that a source can *only* do X, or must be done one-at-a-time, needs the same probe. Go try `?id=a,b,c`.
+1. **Probe the ceiling (MANDATORY at least once):** the decision assumes a limit ("one per request", "max 100", "singular id"). Was that limit ever *measured*, or read once from a doc and assumed? The memory rule covers the other direction, a claim that a source *can't* do X needing a real probe. This is the mirror: a claim that a source can *only* do X, or must be done one-at-a-time, needs the same probe. Go try `?id=a,b,c`.
 2. **Absorbed cost:** what cost is painless right now only because a *different* decision grew the budget or the timeout to swallow it? That cost is invisible, not gone. Name what would resurface it.
-3. **10x load (MANDATORY at least once):** put 10x — or the real upcoming scale — through the same model. Where does it stop fitting? A number that fits nowhere (a 68-hour job that fits neither a timeout nor a day) is the tell that forces the first honest re-look. This is the single most productive probe; it's the "thinks in edge cases at scale" habit made into a step.
+3. **10x load (MANDATORY at least once):** put 10x, or the real upcoming scale, through the same model. Where does it stop fitting? A number that fits nowhere (a 68-hour job that fits neither a timeout nor a day) is the tell that forces the first honest re-look. This is the single most productive probe; it's the "thinks in edge cases at scale" habit made into a step.
 4. **Which axis passed:** the decision was verified on ONE axis (accuracy, correctness, latency). A pass on that axis stamps the whole decision "settled" and stops anyone asking the *other* axes. Name the axis it passed, then name the axes nobody checked, and run 10x on those.
-5. **Anchor trace:** the number driving the decision — trace it to its source and the source's date. Was the premise that made it true still true today? Anchors set at one scale silently misprice the next.
-6. **Signal absence:** if this decision were already wrong, what would tell you? Walk the actual alerting/timeout/monitoring path. If the honest answer is "nothing" — it fits inside an unlimited budget, it lands under the timeout — that silence IS the finding. A wrong-but-quiet premise is the one that survives longest.
+5. **Anchor trace:** trace the number driving the decision to its source and the source's date. Was the premise that made it true still true today? Anchors set at one scale silently misprice the next.
+6. **Signal absence:** if this decision were already wrong, what would tell you? Walk the actual alerting/timeout/monitoring path. If the honest answer is "nothing" (it fits inside an unlimited budget, it lands under the timeout), that silence IS the finding. A wrong-but-quiet premise is the one that survives longest.
 7. **Force the eye, not the re-think:** never accept "I already thought about that." Per the chess study, the reported reconsideration doesn't move attention. Convert every "I'm confident it's fine" into one concrete probe the user runs now (a curl, a count, a scaled dry-run). The probe moves the eye; the re-think doesn't.
 
 ## Output contract
@@ -48,7 +48,7 @@ Apply at least 5. Aim every probe at the QUANTITY or the ASSUMED LIMIT inside th
   - the blast radius: what actually breaks, at what scale, and how loud (silent-for-months vs. immediate),
   - one line of "why it stayed buried": which mechanic hid it (passed on axis X / cost absorbed by decision Y / fits under the current limit).
 - At least one finding must attack a choice the user is proud of or has run for a long time, and assert its very success is what kept the question closed.
-- Close by killing the debate: for the one or two findings that bite hardest, give the exact probe to run right now (the curl, the count, the 10x dry-run) — not "you should test this", the actual command or query. Then your honest bet on which one is real.
+- Close by killing the debate: for the one or two findings that bite hardest, give the exact probe to run right now (the curl, the count, the 10x dry-run), not "you should test this" but the actual command or query. Then your honest bet on which one is real.
 
 ## One worked finding (illustrative: derive your own from THEIR decision; do not reuse this domain or number)
 
@@ -56,7 +56,7 @@ Probe: ceiling + 10x, aimed at a batch job that fetches one record per API call.
 
 - **"One call per record" was never a limit, just an untested default.**
 - Concrete: the recon note recommended the lookup endpoint and verified it on *accuracy* (25/25 vs 24/25). It never asked how many ids one call accepts, so the whole cost model assumed one-call-per-record. At today's volume that's an 80-minute job; the incoming feature multiplies the record count 60x, which is a 68-hour job that fits neither the timeout nor a day.
-- Blast radius: silent until the new feature ships, then the job simply never completes — no error, just a run that outlives its window.
+- Blast radius: silent until the new feature ships, then the job simply never completes: no error, just a run that outlives its window.
 - Why it stayed buried: the accuracy pass stamped the endpoint "settled", and an unlimited-minutes decision made the 80-minute job painless, so nothing forced anyone to ask "how many ids per call?" The answer, once probed, was 150+.
 
 ## Guardrails / failure modes
@@ -68,7 +68,7 @@ Probe: ceiling + 10x, aimed at a batch job that fetches one record per API call.
 
 ## What this is not
 
-- Not a correctness audit. It does not hunt for bugs in the code as written — that's `/code-review`. It challenges the assumption the code was built on.
+- Not a correctness audit. It does not hunt for bugs in the code as written; that's `/code-review`. It challenges the assumption the code was built on.
 - Not a plan. It opens buried questions; it doesn't pick one and fix it. Once a finding lands and its probe confirms it, hand off to your usual planning step.
 - Not a rewrite pitch. A finding can be real and still not worth acting on yet; naming the threshold lets the user decide.
 

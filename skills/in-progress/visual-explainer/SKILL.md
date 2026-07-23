@@ -127,7 +127,7 @@ This page has the most design freedom of the family (the subject is a situation,
 - **Semantic color carries state, not the accent.** `bad` / `warn` / `ok` / `unverified` are meaning; keep them separate from the one accent and don't rainbow the blocks.
 - **Numbering encodes a real sequence.** Sections auto-number, so lean on that order only when the beats are an actual sequence; a pile of parallel points shouldn't wear numbers it doesn't earn.
 - **Both themes, through the tokens.** The page now first-loads the viewer's OS theme. Style every block via the token vars so both themes cover anything you add.
-- **Don't spend the freedom on an AI-design default.** Cream-and-serif-and-terracotta, a lone acid-green pop, a purple-to-blue gradient hero, emoji as section markers, everything centered: where nothing forces a look, pick from the subject instead.
+- **Spend the freedom on the subject's world.** Pull the accent and neutral from the system, product, or domain the tangle lives in; where nothing forces a look, that world is the source.
 
 ## What this is not
 

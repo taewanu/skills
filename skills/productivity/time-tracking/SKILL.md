@@ -109,7 +109,7 @@ If multiple sessions are already in state:
 
 ### Stale-session subflow
 
-Triggered from `start` when one or more existing sessions look abandoned (last segment started >12h ago AND state file mtime >12h ago). Don't show the live conflict choices: they assume the user is mid-flow on the old session, which they're not. Instead:
+Triggered from `start` when one or more existing sessions look abandoned (latest segment activity >12h old, per step 4's staleness rule). Show the cleanup menu below, not the live conflict choices: those assume the user is mid-flow on the old session, which they're not.
 
 ```
 ⚠️ <existing-project> 세션이 안 닫혀있어:

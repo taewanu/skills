@@ -73,22 +73,13 @@ Then run the cold pass before you ship. Read **only the TL;DR and each section's
 
 The **chrome is yours to tweak**: the token colors, which block types each section uses, the eyebrow label, the icons in flow nodes, whether you ship a light theme at all. The template includes one worked instance of every block type (contrast / timeline / flow / table / prose / glossary) as scaffolding. **Replace the placeholder content; delete the block types you don't need.** If you find yourself making the same deviation twice across invocations, update the template instead of re-patching it each time.
 
-Block kit (each marked with a `TYPE:` comment in the template):
-
-- **contrast:** `.grid2` of `.pane` cards (`.warn` / `.bad` / `.ok` accent), each with a `.tag`, `h3`, body, and a `.why` line; pair with a `.callout` for the gotcha ("don't conflate…").
-- **timeline:** `.timeline` with `.track` rows; wrap the in-window events in `.win`, and mark the decisive event `.ev.hit-ok` (inside) or `.ev.hit-bad` (outside).
-- **flow:** `.flow` of `.node` boxes joined by `.arrow`; mark the broken one `.node.dead`, healthy ones `.node.ok`; put a fixed twin in a second `.card` beside it.
-- **table / decision:** `table.cmp`; verdict cells are `.chip.ok` / `.chip.bad` / `.chip.rec` (the recommendation). Add `data-decision` when it's a fork the reader must choose. That switches on the per-row pick buttons.
-- **callout:** `.callout` (a gotcha, red), `.callout.good` (a resolution, green), `.callout.unverified` (an honest hedge, amber). Reach for `.unverified` the moment a claim rests on something you didn't actually check; delete it once you do.
-- **coverage:** the `.coverage` line near the foot, naming what you deliberately left out of scope or couldn't verify. Delete it only if you genuinely covered everything.
-- **prose:** a plain `.card` of text for "why now," background, etc.
-- **glossary:** `dl.glossary` of `dt`/`dd` pairs.
+Block kit: `references/block-kit.md` maps each block type to the shape it fits (from step 1) and the classes it uses; the template's `TYPE:` comments mark where each lives.
 
 Content rules:
 
 - **Escape code as text.** Inside the page, write `&lt;`, `&gt;`, `&amp;` for literal `<`, `>`, `&`: one stray `<` eats the rest of the line.
 - **The TL;DR is not optional and not a summary of the page;** it's the answer. The sections justify it; it doesn't preview them.
-- **Don't over-build.** Three sections that nail the shape beat eight that pad it. If the whole thing is one contrast pair plus a TL;DR, ship that.
+- **Build the minimum that nails the shape.** Three sections that carry it beat eight that pad it; if the whole thing is one contrast pair plus a TL;DR, ship that.
 
 Save to `/tmp/<project-slug>-visual-explainer.html`. Slug = `basename $PWD` lower-cased, non-alphanumeric → `-`, collapsed; fall back to `explainer` if empty.
 
@@ -99,7 +90,7 @@ Save to `/tmp/<project-slug>-visual-explainer.html`. Slug = `basename $PWD` lowe
 - macOS: `open <path>` · Linux: `xdg-open <path>` · WSL: `wslview <path>`, else `cmd.exe /c start <path>` · Windows: `start <path>`.
 - Detect via `uname` and `$WSL_DISTRO_NAME`.
 
-If the open command fails (headless / SSH / no `xdg-open`), don't retry blindly; print the absolute path and ask the user to open it: *"브라우저 자동 오픈이 안 돼. 이거 직접 열어줘: /tmp/foo-visual-explainer.html"*.
+If the open command fails (headless / SSH / no `xdg-open`), print the absolute path and ask the user to open it: *"브라우저 자동 오픈이 안 돼. 이거 직접 열어줘: /tmp/foo-visual-explainer.html"*.
 
 ### 5. Round-trip, then wait in chat
 
@@ -108,7 +99,7 @@ The explainer isn't done when it renders; its job is to be carried off, and any 
 - **Copy at the grain that fits.** Whole page → toolbar **Copy as Markdown** (drop it into a PR/issue). Just the headline → **TL;DR** (one line into Slack). One section → hover its heading for **⧉ section**.
 - **Decision pick.** If the page laid out a fork (`data-decision` table), the user clicks **이걸로** on a row and pastes back `decision: <option> @ theme=…`. Apply that choice.
 
-Say something like *"설명 페이지 띄웠어. 위에서부터 읽으면 돼. 통째로 보낼 거면 우상단 'Copy as Markdown', 한 줄만이면 'TL;DR'. 모델 정할 거면 표에서 '이걸로' 눌러서 붙여줘."* and stop. Don't poll the file.
+Say something like *"설명 페이지 띄웠어. 위에서부터 읽으면 돼. 통째로 보낼 거면 우상단 'Copy as Markdown', 한 줄만이면 'TL;DR'. 모델 정할 거면 표에서 '이걸로' 눌러서 붙여줘."* and stop; the user reads and replies when ready.
 
 ### 6. After: act, then clean up
 
@@ -117,14 +108,16 @@ Say something like *"설명 페이지 띄웠어. 위에서부터 읽으면 돼. 
 
 ## Design discipline
 
-- **Conclusion-first, or it's not this skill.** The TL;DR answers the question; sections justify it. If the top of the page makes the reader wait for the point, rewrite it.
-- **Name the shape.** The worth is splitting the two conflated problems, drawing the dead node, laying the fork in a table, not transcribing everything you know.
-- **Draw what's drawable.** A timing window, a path, a fork: a diagram lands where a paragraph slogs. Prose is for what isn't structural.
-- **Verify before you forward.** Read the source; don't explain from memory. A confident wrong explainer is worse than none, because this one travels.
-- **Say what you couldn't verify, and what you left out.** The `.callout.unverified` hedge and the `.coverage` line are not optional polish: silent gaps read as "fully covered and confirmed" the moment the page is forwarded, which is exactly when a hidden hole does damage.
-- **Generalize the lesson, keep out the incident.** Transferable rule on the page; ticket numbers and today's repro stay in the eyebrow at most.
-- **One file, no build, no CDN.** It opens on a double-click and survives being copied to another machine.
-- **Always round-trip.** Wire every grain: whole-page export, TL;DR, per-section copy, decision pick. An explanation you can't forward, and a fork you can't choose from, are both half-built.
+Before you ship, re-check these, each defined in the steps above:
+
+- **Conclusion-first.** The TL;DR answers; the sections justify.
+- **Name the shape.** Split, draw, or tabulate the structure; that's the worth.
+- **Draw what's drawable**; prose carries what isn't structural.
+- **Verify before you forward.** A confident wrong explainer travels.
+- **Mark the gaps.** `.callout.unverified` for a hedge, `.coverage` for what's out of scope.
+- **Generalize the lesson**, keep the incident out.
+- **One file, no build, no CDN.**
+- **Round-trip every grain.**
 
 ## Visual craft
 

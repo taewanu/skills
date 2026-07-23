@@ -52,7 +52,7 @@ A scroll with empty narration is just dimmed code. The worth is the **script**: 
 
 - **Order by how the logic runs**, not top-to-bottom by accident. Entry → the decision that matters → the consequence.
 - **One idea per beat.** If a beat needs two sentences about two different lines, it's two beats. The whole point is one-thing-at-a-time.
-- **Pick the line that carries the insight** and mark it: the guard that *is* the rate limit, the early return callers must check, the line where the bug would live. Don't narrate filler lines; let the spotlight skip them.
+- **Pick the line that carries the insight** and mark it: the guard that *is* the rate limit, the early return callers must check, the line where the bug would live. Let the spotlight skip the filler.
 - Use a **connector** (`data-to`) when the point is a relationship: "this returns false, that returns true; callers must check the value." The page frames **both ends** when their span fits the code panel and arcs a connector between them.
 - **When two related lines are too far apart to share one screen, split them into two beats**; this is the settled pattern. Point at one, then the other, and let the notes carry the link ("…but why is the first key the oldest?" → "here's the contract it leans on"). Each end gets full-screen focus, which teaches better than cramming both into one view. (Folding the gap or splitting the panel were considered and rejected: they drift toward the all-at-once reference model that's `visual-code-review`'s job, not this skill's.)
 - **Keep the split navigable with `data-see`.** A two-beat split can lose the thread: the reader sees "which signal?" but can't get to it. Add `data-see="9"` (accepts a list, e.g. `"9,40"`) to render a clickable **`↗ jump to L9`** chip in the note; clicking it jumps to the beat that focuses that line. Use it to wire the two halves both ways so the relationship is one click apart, no stretched connector needed. The chip is live only once its card is in focus: on a dimmed card a click just brings that card into focus, so you read the step before you leap from it; and any such jump pins a **`↩ back`** chip to the bottom of the card you land on (labelled by the origin's line, like the `↗` chip), so the leap is never one-way.
@@ -82,7 +82,7 @@ Run this as a deliberate cold pass before shipping: re-read each note's first li
 </li>
 ```
 
-Rules for the list form: the `.lead` is mandatory and must stand alone as the takeaway; bullets must be genuinely **parallel** (not a sentence chopped at the commas); keep it to ~2–4 items; more than that is usually several beats. Don't reach for bullets by default: prose is tighter, and a list of one is just a sentence wearing a costume. Both shapes round-trip correctly: per-note copy and the transcript render the lead then `- point` lines.
+Rules for the list form: the `.lead` is mandatory and must stand alone as the takeaway; bullets must be genuinely **parallel** (not a sentence chopped at the commas); keep it to ~2–4 items; more than that is usually several beats. Prefer prose by default: it's tighter, and a list of one is just a sentence wearing a costume. Both shapes round-trip correctly: per-note copy and the transcript render the lead then `- point` lines.
 
 ### 3. Build one self-contained HTML file
 

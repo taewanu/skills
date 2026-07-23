@@ -47,7 +47,7 @@ Parse what's relevant to the variable under test (colors, font sizes, radii, sha
 
 If the project defines both dark and light token sets (`:root` + `[data-theme="light"]`, or `@media (prefers-color-scheme)`), copy both: the theme toggle in step 4 needs them.
 
-If the project ships **only one theme**, derive the other in-place: keep brand/accent colors (`--accent`, `--color-sunrise`, etc.) unchanged, and invert lightness on the bg/fg ramp only (e.g. warm-white `#fafaf8` ↔ deep `#050608`). Don't agonize: this is just so the toggle works; the user assesses on the project's actual theme.
+If the project ships **only one theme**, derive the other in-place: keep brand/accent colors (`--accent`, `--color-sunrise`, etc.) unchanged, and invert lightness on the bg/fg ramp only (e.g. warm-white `#fafaf8` ↔ deep `#050608`). A rough inversion is enough: it just makes the toggle work; the user assesses on the project's actual theme.
 
 ### 3. Build a single self-contained HTML file
 

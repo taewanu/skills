@@ -73,7 +73,7 @@ If AskUserQuestion isn't available in the current context, fall back to printing
 
 5. **Read previous slipped** (optional context): from same-project tracking file, find the most recent entry, extract `slipped:` line if present.
 
-6. **Write state file**: append a new session object to the `sessions` list (see schema in §"State file"). Don't overwrite existing entries: the list can hold multiple.
+6. **Write state file**: append a new session object to the `sessions` list (see schema in §"State file"); the list can hold multiple.
 
 7. **Confirm to user** (concise):
    ```
@@ -193,7 +193,7 @@ Shortcut for "close the current session quickly and start a new one." Equivalent
 2. If exactly one active session exists, run §"Switch shortcut mode" of `end` on it, then `start` the new project.
 3. If multiple active sessions exist, ask which one to switch from (or whether to close all). Then proceed.
 
-If the user just says `switch` with no project name, prompt for one. Don't infer from cwd here: `switch` is an explicit intent.
+If the user just says `switch` with no project name, prompt for one. `switch` takes an explicit project name (unlike `start`, it doesn't auto-detect from cwd).
 
 ## Sub-action: `discard [project]`
 

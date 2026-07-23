@@ -2,8 +2,8 @@
 set -euo pipefail
 
 # Symlinks every skill in this repo into the local harness skill directories:
-#   ~/.claude/skills  — Claude Code
-#   ~/.agents/skills  — Codex and other Agent Skills-compatible harnesses
+#   ~/.claude/skills : Claude Code
+#   ~/.agents/skills : Codex and other Agent Skills-compatible harnesses
 # Symlinks rather than copies, so editing a skill here is live everywhere at
 # once and `git pull` is the whole update story. Re-run after adding,
 # removing, or renaming a skill. Skills under deprecated/ are not linked.

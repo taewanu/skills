@@ -14,9 +14,9 @@ description: >-
 
 # Create Obsidian note
 
-A kepano-style vault's structure is not obvious, and getting it wrong produces broken links or notes that never surface in the right view. Follow these rules so you write it right the first time instead of rediscovering them.
-
 **Read `references/vault-map.md` before touching anything.** It is this skill's configuration: the vault path and how to access it, the folder table, the filename and date conventions, and which categories are tracked. Everything below is written against a generic kepano vault and resolves its concrete values from that file.
+
+Follow the rules below rather than rediscovering them. A kepano-style vault's structure is not obvious, and getting it wrong produces broken links, or notes that never surface in the right view.
 
 ## One question decides the folder: who wrote it
 

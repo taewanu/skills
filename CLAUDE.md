@@ -1,10 +1,10 @@
 Skills live under `skills/<bucket>/<skill-name>/`:
 
-- `engineering/` — daily code and product work
-- `productivity/` — daily non-code workflow tools
-- `personal/` — tied to one person's own setup, never promoted
-- `in-progress/` — drafts not yet ready to ship
-- `deprecated/` — no longer used
+- `engineering/`: daily code and product work
+- `productivity/`: daily non-code workflow tools
+- `personal/`: tied to one person's own setup, never promoted
+- `in-progress/`: drafts not yet ready to ship
+- `deprecated/`: no longer used
 
 Every skill in `engineering/` and `productivity/` must have a reference in the top-level `README.md` and an entry in `.claude-plugin/plugin.json`'s `skills` array; the plugin ships exactly that promoted set. Skills in `personal/`, `in-progress/`, and `deprecated/` appear in neither.
 
@@ -18,4 +18,4 @@ A skill's `description` is the only part loaded into context every turn, and it 
 
 Run `scripts/link-skills.sh` to symlink every skill into `~/.claude/skills` and `~/.agents/skills`. Re-run it after adding, removing, or renaming a skill.
 
-Skills that generate an HTML page should end with an export/action button (copy as JSON / prompt / markdown / values) that round-trips the user's interaction back into pasteable text — whenever the page involves interaction or a decision, so the user stays in the loop.
+Skills that generate an HTML page should end with an export/action button (copy as JSON / prompt / markdown / values) that round-trips the user's interaction back into pasteable text, whenever the page involves interaction or a decision, so the user stays in the loop.

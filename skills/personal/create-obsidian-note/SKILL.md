@@ -2,21 +2,18 @@
 name: create-obsidian-note
 description: >-
   Capture notes into the user's personal Obsidian vault the way its conventions require,
-  and work with its Bases and Categories. Use this WHENEVER the user
-  wants to save, record, or capture something into their Obsidian vault, add a note, jot
-  down an insight or a concept that came up mid-work, log a learning, or create or edit a
-  Base or Category there, even if they never say "Obsidian", as long as the intent is
-  clearly to persist something into their personal notes. Use it too when they ask where a
-  note should go or how the vault is organized. A kepano-style vault with hard folder rules
-  and frontmatter-driven Bases, so writing a note the naive way produces broken links and
-  orphaned notes.
+  and work with its Bases and Categories. Use this WHENEVER the user wants to save,
+  capture, or jot down a note, insight, concept, or learning into their Obsidian vault, or
+  create or edit a Base or Category there, even if they never say "Obsidian", as long as
+  the intent is clearly to persist something into their personal notes. Use it too when
+  they ask where a note should go or how the vault is organized.
 ---
 
 # Create Obsidian note
 
 **Read `references/vault-map.md` before touching anything.** It is this skill's configuration: the vault path and how to access it, the folder table, the filename and date conventions, and which categories are tracked. Everything below is written against a generic kepano vault and resolves its concrete values from that file.
 
-Follow the rules below rather than rediscovering them. A kepano-style vault's structure is not obvious, and getting it wrong produces broken links, or notes that never surface in the right view.
+A kepano-style vault's structure is not obvious, and getting it wrong produces broken links, or notes that never surface in the right view.
 
 ## One question decides the folder: who wrote it
 
@@ -36,7 +33,7 @@ So ask: **did the user author this idea, or does it exist independently in the w
 
 **A reusable concept in a tracked collection** (a software design concept, an interview-prep item). This is the high-value case. It becomes a `References/` note linked into a Category so it accumulates and appears in that Category's Base. Read `references/bases-and-categories.md` for the frontmatter, the standard-term convention, and how to build a new category.
 
-**Several concepts from one session.** Write the dated session log in `Notes/`, then split each *reusable* concept into its own `References/` note linked to a category. Have the session note embed the category Base's newest-first view (`![[<category>.base#<that view>]]`, named in `references/vault-map.md`) so it reads in one place. Do not paste concept bodies into the session note; that ballooned an earlier note to 280 lines, and the Base embed keeps it to a screen.
+**Several concepts from one session.** Write the dated session log in `Notes/`, then split each *reusable* concept into its own `References/` note linked to a category. Have the session note embed the category Base's newest-first view (`![[<category>.base#<that view>]]`, named in `references/vault-map.md`) so it reads in one place. Do not paste concept bodies into the session note; the Base embed keeps it to a screen instead of ballooning the note.
 
 ## Conventions that keep the vault coherent
 

@@ -1,6 +1,6 @@
 ---
 name: break-the-frame
-description: "Generate unexpected, frame-breaking angles on a strategy, product, business model, or career situation by force-applying a library of inversion operators to the user's CONCRETE assets, not by free-associating. Sibling of step-back-as-user and step-back-as-maintainer, but the lens is strategy / identity / business-model, not UX or code. Each angle names a real stake (who has what on the line) and why it was invisible; at least one angle must attack a beloved 'sacred cow'. Use when the user asks for a fresh or unexpected perspective, a different angle, a breakthrough, a way out of a rut, says 'be creative', 'think outside the box', 'what am I not seeing', '색다른 관점', '생각 못한 각도', '돌파구', '프레임 깨줘', or when a discussion has converged too early and needs shaking."
+description: "Generate unexpected, frame-breaking angles on a strategy, product, business model, or career situation by force-applying a library of inversion operators to the user's CONCRETE assets, not by free-associating. Sibling of step-back-as-user and step-back-as-maintainer, but the lens is strategy / identity / business-model, not UX or code. Each angle names a real stake (who has what on the line) and why it was invisible. Use when the user asks for a fresh or unexpected perspective, a different angle, a breakthrough, a way out of a rut, says 'be creative', 'think outside the box', 'what am I not seeing', '색다른 관점', '생각 못한 각도', '돌파구', '프레임 깨줘', or when a discussion has converged too early and needs shaking."
 ---
 
 # Break The Frame

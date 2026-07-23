@@ -11,11 +11,16 @@
   Mechanics (theme + viewport toggle, control→var binding, play/replay, copy) are
   solved: copy them verbatim; the chrome and which controls you expose are yours.
 -->
-<html lang="en" data-theme="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>__PROJECT__: interactive tune</title>
+    <script>
+      /* First paint honors the OS theme; a saved toggle choice overrides it. */
+      try { document.documentElement.dataset.theme = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"; }
+      catch (e) { document.documentElement.dataset.theme = "dark"; }
+    </script>
     <style>
       /* ===== Base color fallbacks: a project token block pasted below overrides these ===== */
       :root {
@@ -210,7 +215,7 @@
           frame.dataset.vp = v;
           document.querySelectorAll("[data-vp-set]").forEach((b) => b.classList.toggle("active", b.dataset.vpSet === v));
         }
-        applyTheme(localStorage.getItem(THEME_KEY) || "dark");
+        applyTheme(localStorage.getItem(THEME_KEY) || root.dataset.theme || "dark");
         applyVp(localStorage.getItem(VP_KEY) || "full");
         document.querySelectorAll("[data-theme-set]").forEach((b) => b.addEventListener("click", () => { applyTheme(b.dataset.themeSet); localStorage.setItem(THEME_KEY, b.dataset.themeSet); }));
         document.querySelectorAll("[data-vp-set]").forEach((b) => b.addEventListener("click", () => { applyVp(b.dataset.vpSet); localStorage.setItem(VP_KEY, b.dataset.vpSet); }));

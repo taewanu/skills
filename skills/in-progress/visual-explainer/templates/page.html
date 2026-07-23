@@ -1,10 +1,15 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <!-- TITLE: the question the page answers -->
     <title data-title>Why does X happen? · explainer</title>
+    <script>
+      /* First paint honors the OS theme; a saved toggle choice overrides it. */
+      try { document.documentElement.dataset.theme = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"; }
+      catch (e) { document.documentElement.dataset.theme = "dark"; }
+    </script>
     <style>
       /* ---- MECHANICS: tokens. Tweak colors freely; keep the names. ---- */
       :root, [data-theme="dark"] {
@@ -523,7 +528,7 @@
       const html = document.documentElement, themeBtn = document.getElementById("themeBtn");
       const KEY = "visual-explainer-theme";
       const apply = (t) => { html.setAttribute("data-theme", t); themeBtn.textContent = t === "dark" ? "🌙 Dark" : "☀ Light"; };
-      try { const saved = localStorage.getItem(KEY); if (saved) apply(saved); } catch (e) {}
+      try { apply(localStorage.getItem(KEY) || html.getAttribute("data-theme")); } catch (e) {}
       themeBtn.addEventListener("click", () => {
         const t = html.getAttribute("data-theme") === "dark" ? "light" : "dark";
         apply(t); try { localStorage.setItem(KEY, t); } catch (e) {}

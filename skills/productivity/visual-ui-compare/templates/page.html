@@ -6,11 +6,16 @@
     2. <title> and <h1> + <p> in <header class="page">: name the comparison + variable
     3. the CELLS marker: one .variant block per cell; see the comment-stub at the bottom
 -->
-<html lang="en" data-theme="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>__PROJECT__: visual compare</title>
+    <script>
+      /* First paint honors the OS theme; a saved toggle choice overrides it. */
+      try { document.documentElement.dataset.theme = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"; }
+      catch (e) { document.documentElement.dataset.theme = "dark"; }
+    </script>
     <style>
       /* ===== Base color fallbacks: a project token block pasted below overrides these ===== */
       :root {
@@ -244,7 +249,7 @@
           );
         }
 
-        applyTheme(localStorage.getItem(THEME_KEY) || "dark");
+        applyTheme(localStorage.getItem(THEME_KEY) || root.dataset.theme || "dark");
         applyVp(localStorage.getItem(VP_KEY) || "full");
 
         document.querySelectorAll("[data-theme-set]").forEach((btn) => {

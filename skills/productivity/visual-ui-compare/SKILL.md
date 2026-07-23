@@ -1,6 +1,6 @@
 ---
 name: visual-ui-compare
-description: Generate a single self-contained HTML page for making a visual decision by eye, open it in the browser, and let the user pick. Usually a grid of variants side-by-side with identical content and background (color, size, spacing, shadow, radius, opacity, border, and discrete style/treatment variants like badge styles, button treatments, card layouts); or, when the choice is motion or a continuous range the user wants to scrub and feel (animation, easing, duration, transitions), a single live preview with sliders/knobs to tune instead. Use whenever the user wants to compare or tune a visual choice ("비교해서 보여줘", "어떤 게 나아?", "A/B 보고 싶어", "html로 만들어 봐", "직접 보고 결정할게", "UI 결정 피로도", "easing 비교", "이 애니메이션 느낌 좀 보자", "transition 속도 조절", "live preview로 보여줘", "compare visually", "show me side by side", "which one looks better?", "A/B these", "tune this animation", "slider for this") or any time you're about to use AskUserQuestion with 2+ options for a visual property. When in doubt, build the page; word-based judgment of visual variants is unreliable.
+description: Generate a single self-contained HTML page for making a visual decision by eye, open it in the browser, and let the user pick: a grid of variants side-by-side (color, size, spacing, shadow, radius, border, badge or card styles), or a live preview with sliders when the choice is motion or a continuous range (animation, easing, duration, transitions). Use whenever the user wants to compare or tune a visual choice ("비교해서 보여줘", "어떤 게 나아?", "A/B 보고 싶어", "html로 만들어 봐", "직접 보고 결정할게", "easing 비교", "이 애니메이션 느낌 좀 보자", "transition 속도 조절", "compare visually", "show me side by side", "which one looks better?", "tune this animation", "slider for this") or any time you're about to use AskUserQuestion with 2+ options for a visual property.
 ---
 
 # Visual UI Compare
@@ -144,6 +144,16 @@ These rules came out of a real session. Bake them in; don't rediscover them. (Th
 - **Mark the current baseline.** Append `(current)` to whichever cell is already shipping. Users forget which one is the old one.
 - **Background context changes perception.** Shadows look invisible on flat backgrounds and fine when there's a subtle gradient above the edge. If the deployed environment has a gradient/glow/image behind the element (planned or shipped), simulate it in the cell background.
 - **Show the obvious-wrong default when instructive.** Tailwind's `shadow-2xl` casts downward, wrong for bottom-anchored sheets that need an upward shadow. Including a "wrong direction" cell can clarify *why* the right one is right.
+
+## Visual craft
+
+The page renders the project's own UI, so the craft rule is to let that show through and keep everything else quiet.
+
+- **Extend the token pull to the neutral, not just the accent.** The page already inlines the project's tokens; carry its background ramp too, so the cells sit on the project's real surface instead of a generic gray.
+- **Keep the cell chrome quiet.** The only thing that should draw the eye is the variable under test. A loud frame, label, or accent competes with the judgment you're asking for.
+- **Route the highlight through `--accent`, leave the sample alone.** Active-pick state is separate from the sample's own colors; the single `--accent` seam already carries it, so don't tint the sample to signal selection.
+- **Assess on the project's real theme.** The page now first-loads the viewer's OS theme, but the decision should be judged in the project's primary theme; the toggle is there to check the other.
+- **The shell is a neutral host, not an identity.** Don't restyle the toolbar and grid into their own strong look; a page with an opinion colors the comparison running through it.
 
 ## Out of scope
 

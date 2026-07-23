@@ -18,7 +18,7 @@ The reason this skill exists: text linearizes information. Rendering the choice 
 
 - The user already picked; just implement.
 - The choice is non-visual (logic, copy, naming, tech stack); AskUserQuestion is fine.
-- Real cross-browser / device rendering differences: the page previews one engine on your machine. For actual Safari-vs-Chrome or real-device behavior, test there. (Motion and continuous ranges are **not** a skip: that's what the tuner is for; see below.)
+- Real cross-browser / device rendering differences: see Out of scope below. (Motion and continuous ranges are **not** a skip: that's what the tuner is for.)
 
 ## Steps
 

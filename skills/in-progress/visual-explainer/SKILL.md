@@ -71,7 +71,7 @@ Then run the cold pass before you ship. Read **only the TL;DR and each section's
 - **Decision round-trip:** any `<table class="cmp" data-decision>` gets a per-row **이걸로 / pick** button injected; clicking copies `decision: <option> @ theme=…` back to chat. This is the "stay in the loop on a decision" hook; use it whenever the page tees up a fork.
 - **Theme toggle:** `data-theme` + `localStorage`.
 
-The **chrome is yours to tweak**: the token colors, which block types each section uses, the eyebrow label, the icons in flow nodes, whether you ship a light theme at all. The template includes one worked instance of every block type (contrast / timeline / flow / table / prose / glossary) as scaffolding. **Replace the placeholder content; delete the block types you don't need.** If you find yourself making the same deviation twice across invocations, update the template instead of re-patching it each time.
+The **chrome is yours to tweak**: the token colors, which block types each section uses, the eyebrow label, the icons in flow nodes, whether you ship a light theme at all. The template includes one worked instance of every block type as scaffolding. **Replace the placeholder content; delete the block types you don't need.** If you find yourself making the same deviation twice across invocations, update the template instead of re-patching it each time.
 
 Block kit: `references/block-kit.md` maps each block type to the shape it fits (from step 1) and the classes it uses; the template's `TYPE:` comments mark where each lives.
 
@@ -127,12 +127,3 @@ This page has the most design freedom of the family (the subject is a situation,
 - **Semantic color carries state, not the accent.** `bad` / `warn` / `ok` / `unverified` are meaning; keep them separate from the one accent and don't rainbow the blocks.
 - **Numbering encodes a real sequence.** Sections auto-number, so lean on that order only when the beats are an actual sequence; a pile of parallel points shouldn't wear numbers it doesn't earn.
 - **Both themes, through the tokens.** The page now first-loads the viewer's OS theme. Style every block via the token vars so both themes cover anything you add.
-- **Spend the freedom on the subject's world.** Pull the accent and neutral from the system, product, or domain the tangle lives in; where nothing forces a look, that world is the source.
-
-## What this is not
-
-- Not a code walkthrough or annotated diff: that's `visual-code-lecture` / `visual-code-review`.
-- Not a visual A/B: that's `visual-ui-compare`.
-- Not a correctness audit: that's `/code-review`.
-- Not a living team doc: if it needs editing over time, write an ADR / markdown doc in the repo instead.
-- Not a slide deck or a presentation tool: it's a single scrolling page meant to be read and forwarded.

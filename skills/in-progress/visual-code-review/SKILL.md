@@ -1,6 +1,6 @@
 ---
 name: visual-code-review
-description: Render a diff, PR, or slice of code as a single self-contained HTML page (the real diff with inline margin annotations, a flow/architecture diagram, the key snippets explained, risks and gotchas, open questions), then open it in the browser so the change reads by eye instead of scrolling a terminal diff or a wall of markdown. Click-to-copy notes and summary round-trip decisions to chat. Two modes: **review** (a change/diff/PR) and **explain** (existing code or a subsystem). Use whenever the user wants a change or codebase made legible visually ("이 diff 설명해줘", "PR 리뷰 보기 좋게 만들어줘", "이 코드 흐름 그림으로", "아키텍처 html로 설명", "walk me through this PR", "explain this diff/PR as html", "visualize this change", "help me understand this module", "render the diff with annotations", "make an html explainer for this code") or any time you're about to dump a long diff or multi-paragraph code explanation as plain markdown and a navigable HTML artifact would land better. NOT a syntax-highlighter or code-to-markup converter, and NOT a graded correctness audit: that's `/code-review`; this renders understanding and can lay those findings over the diff. When the change is big or unfamiliar, prefer building the page over explaining in prose.
+description: Render a diff, PR, or slice of code as a single self-contained HTML page: the real diff with inline margin annotations, a flow diagram, key snippets, risks, open questions. Click-to-copy notes round-trip decisions to chat. Two modes: **review** (a change/diff/PR) and **explain** (existing code or a subsystem). Use whenever the user wants a change or codebase made legible visually ("이 diff 설명해줘", "PR 리뷰 보기 좋게 만들어줘", "이 코드 흐름 그림으로", "아키텍처 html로 설명", "walk me through this PR", "explain this diff/PR as html", "visualize this change", "help me understand this module") or is about to dump a long diff as plain markdown. NOT a graded correctness audit: that's `/code-review`; this can lay those findings over the diff.
 ---
 
 # Visual Code Review
@@ -111,6 +111,16 @@ Say something like *"리뷰 페이지 띄웠어. 고칠 거 골라서 노트 복
 - **One file, no build.** Inline all CSS/JS/SVG. It has to open on a double-click and survive being copied to someone else's machine: no CDN, no `npm`, no external highlighter.
 - **Always round-trip.** Every note and the summary are click-to-copy, so decisions made in the page paste straight back into chat. An explainer you can't feed back is a dead end; the loop is the whole point.
 - **Say what you skipped.** Bounded coverage (top-N files, skipped a generated file) gets a visible line in the page, not silence.
+
+## Visual craft
+
+The template ships a committed GitHub-diff look; that's a starting point to work within, not a default to escape.
+
+- **Keep the diff aesthetic; don't reskin it.** The GitHub-diff palette is the deliberate visual world here. Tweak within it for the material; don't turn it into a generic accent-on-rounded-cards dashboard.
+- **Note kinds are semantic, not the accent.** `info` / `watch` / `risk` / `question` carry state; keep them distinct from the accent and add no new hues. The color has to mean something at a glance, so a rainbow kills it.
+- **Choose the neutral, don't inherit it.** If you retint the grays, bias them toward the accent; a pure mid-gray reads as unconsidered.
+- **Both themes, through the tokens.** The page now first-loads the viewer's OS theme. Style every block you add via the token vars so both themes cover it; never hardcode a color inside one theme.
+- **The type is a deliberate voice.** The system/mono stack matches the editor the reader lives in. Don't swap in a webfont: it breaks the single self-contained file for no gain.
 
 ## What this is not
 

@@ -1,6 +1,6 @@
 ---
 name: visual-explainer
-description: Turn a tangled technical thing (a gnarly bug and the decision it forces, a non-obvious system behavior, an architectural "why") into ONE self-contained HTML page that makes it both understandable and shareable. Conclusion-first: a TL;DR one-liner at the top that every section hangs off, then numbered sections that mix prose, before/after contrast cards, signal/data-flow diagrams (with the dead node highlighted), timing tracks, and option-vs-dimension comparison tables, closing with a plain-language glossary. The page opens on a double-click (no build, no CDN) and round-trips back to chat at three grains (whole-page "Copy as Markdown" into a PR or issue, a TL;DR-only copy for Slack, per-section copy), plus pick-a-row buttons on any decision table so a fork the page tees up comes back as the chosen option. Use when the user wants something *explained and handed off*, not when they want code walked or a visual picked: "이거 왜 이런지 설명자료로 만들어줘", "남들도 이해하게 정리해줘", "이슈 설명 페이지", "결정 배경 정리", "explain this so the team gets it", "write up why this happens", "make a shareable explainer", "turn this into an explainer page", "document this decision/tradeoff". Sibling of `visual-code-lecture` / `visual-code-review` (those teach or annotate *real code* line by line); reach for THIS when the subject is a situation, a decision, or a phenomenon, viewed zoomed out rather than line-by-line. Not for picking a visual by eye (`visual-ui-compare`) and not a correctness audit (`/code-review`).
+description: Turn a tangled technical thing (a gnarly bug and the decision it forces, a non-obvious system behavior, an architectural "why") into ONE self-contained, conclusion-first HTML page that explains it, can be handed off, and copies itself back out as Markdown. Use when the user wants something *explained and handed off*: "이거 왜 이런지 설명자료로 만들어줘", "남들도 이해하게 정리해줘", "이슈 설명 페이지", "결정 배경 정리", "explain this so the team gets it", "write up why this happens", "make a shareable explainer", "document this decision/tradeoff". Sibling of `visual-code-lecture` / `visual-code-review`, which annotate *real code*; reach for THIS when the subject is a situation, a decision, or a phenomenon. Not `visual-ui-compare` (pick by eye), not `/code-review` (audit).
 ---
 
 # Visual Explainer
@@ -125,6 +125,16 @@ Say something like *"설명 페이지 띄웠어. 위에서부터 읽으면 돼. 
 - **Generalize the lesson, keep out the incident.** Transferable rule on the page; ticket numbers and today's repro stay in the eyebrow at most.
 - **One file, no build, no CDN.** It opens on a double-click and survives being copied to another machine.
 - **Always round-trip.** Wire every grain: whole-page export, TL;DR, per-section copy, decision pick. An explanation you can't forward, and a fork you can't choose from, are both half-built.
+
+## Visual craft
+
+This page has the most design freedom of the family (the subject is a situation, not fixed code), so the template look is a floor to build on, not the finish. Aim for a polished utilitarian treatment: real hierarchy, considered spacing, a chosen palette. It's a read-and-act reference, not a landing page, so skip the flashy hero and ornament.
+
+- **Derive the palette from the subject.** When the tangle has its own world (the system, the product, the domain), pull the accent and neutral from that, not the template default. Bias the gray toward that accent; never a pure mid-gray.
+- **Semantic color carries state, not the accent.** `bad` / `warn` / `ok` / `unverified` are meaning; keep them separate from the one accent and don't rainbow the blocks.
+- **Numbering encodes a real sequence.** Sections auto-number, so lean on that order only when the beats are an actual sequence; a pile of parallel points shouldn't wear numbers it doesn't earn.
+- **Both themes, through the tokens.** The page now first-loads the viewer's OS theme. Style every block via the token vars so both themes cover anything you add.
+- **Don't spend the freedom on an AI-design default.** Cream-and-serif-and-terracotta, a lone acid-green pop, a purple-to-blue gradient hero, emoji as section markers, everything centered: where nothing forces a look, pick from the subject instead.
 
 ## What this is not
 

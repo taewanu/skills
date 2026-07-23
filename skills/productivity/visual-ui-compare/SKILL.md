@@ -100,11 +100,11 @@ Both matter: a decision can look right in dark/desktop and wrong in light/mobile
 - Plain Windows: `start <path>`
 - Detect via `uname` and `$WSL_DISTRO_NAME`.
 
-If the open command fails (headless server, SSH session, missing `xdg-open`), don't retry blindly. Print the absolute file path and ask the user to open it manually, e.g. *"브라우저 자동 오픈이 안 돼. 이거 직접 열어줘: /tmp/foo-visual-ui-compare.html"*.
+If the open command fails (headless server, SSH session, missing `xdg-open`), print the absolute file path and ask the user to open it manually, e.g. *"브라우저 자동 오픈이 안 돼. 이거 직접 열어줘: /tmp/foo-visual-ui-compare.html"*.
 
 ### 6. Wait for the user's decision in chat
 
-Don't poll the file. Say something like *"비교 페이지 떴어. Pick this 누르면 클립보드에 복사되니까 그거 붙여줘. 아니면 그냥 말로 알려줘도 돼."* and stop. What you'll get back is `pick: <label> @ theme=… vp=…`, the chosen variant plus the context they judged it in.
+Say something like *"비교 페이지 떴어. Pick this 누르면 클립보드에 복사되니까 그거 붙여줘. 아니면 그냥 말로 알려줘도 돼."* and stop; the user drives from here. What you'll get back is `pick: <label> @ theme=… vp=…`, the chosen variant plus the context they judged it in.
 
 ### 7. After the user picks: patch source + clean up
 

@@ -79,14 +79,14 @@ Rules for the content:
 - **Anchor every annotation.** A note lives next to the hunk or line it's about (a margin callout under the hunk), never as a detached essay at the bottom. Spatial proximity is the entire reason to be in HTML here.
 - **Color by meaning, sparingly.** add/remove tint for the diff; a small set of note kinds (`info` / `watch` / `risk` / `question`) as left-border colors. Don't rainbow it; the color has to mean something at a glance.
 - **Diagram only when it earns it.** A 4-box flow as SVG beats three sentences. A trivial linear flow doesn't need a picture; don't decorate.
-- **Author unified rows only.** Write the `.line` add/del/ctx rows once; Split is built from them on the fly, and Wrap / Whitespace are view toggles over the same markup. Don't hand-build a side-by-side.
+- **Author unified rows only.** Write the `.line` add/del/ctx rows once; Split builds from them on the fly, and Wrap / Whitespace are view toggles over the same markup.
 
 ### 4. Open in the browser
 
 - macOS: `open <path>` · Linux: `xdg-open <path>` · WSL: `wslview <path>`, else `cmd.exe /c start <path>` · Windows: `start <path>`.
 - Detect via `uname` and `$WSL_DISTRO_NAME`.
 
-If the open command fails (headless server, SSH, missing `xdg-open`), don't retry blindly; print the absolute path and ask the user to open it: *"브라우저 자동 오픈이 안 돼. 이거 직접 열어줘: /tmp/foo-visual-code-review.html"*.
+If the open command fails (headless server, SSH, missing `xdg-open`), print the absolute path and ask the user to open it: *"브라우저 자동 오픈이 안 돼. 이거 직접 열어줘: /tmp/foo-visual-code-review.html"*.
 
 ### 5. Round-trip, then wait in chat
 
@@ -97,7 +97,7 @@ The artifact isn't the end; the decisions have to come back here. Copy is **inli
 
 Write each note's line ref inline (`<span class="ref">L41</span>`) so it travels into the copied text, and set `data-group` to the file path (review) or the section/concept (explain) to record where the note belongs.
 
-Say something like *"리뷰 페이지 띄웠어. 고칠 거 골라서 노트 복붙하든가, 말로 알려줘."* and stop. Don't poll the file.
+Say something like *"리뷰 페이지 띄웠어. 고칠 거 골라서 노트 복붙하든가, 말로 알려줘."* and stop; the user drives from here.
 
 ### 6. After: act, then clean up
 
@@ -106,11 +106,13 @@ Say something like *"리뷰 페이지 띄웠어. 고칠 거 골라서 노트 복
 
 ## Design discipline
 
-- **Fidelity over summary.** A paraphrased diff is untrustworthy: the user can't tell what actually changed. Render the lines.
-- **Proximity is the point.** The note beside the hunk beats a notes section at the bottom. If you're writing a long detached analysis, you've lost the reason to be in HTML; move it into the margin or cut it.
-- **One file, no build.** Inline all CSS/JS/SVG. It has to open on a double-click and survive being copied to someone else's machine: no CDN, no `npm`, no external highlighter.
-- **Always round-trip.** Every note and the summary are click-to-copy, so decisions made in the page paste straight back into chat. An explainer you can't feed back is a dead end; the loop is the whole point.
-- **Say what you skipped.** Bounded coverage (top-N files, skipped a generated file) gets a visible line in the page, not silence.
+Before you ship, re-check these, each defined in the steps above:
+
+- **Fidelity over summary.** Render the real lines; a paraphrase is untrustworthy.
+- **Proximity is the point.** The note lives beside its hunk, not in a section at the bottom.
+- **One file, no build.** Inline all CSS/JS/SVG; no CDN, no `npm`, no external highlighter.
+- **Round-trip every note.** Click-to-copy feeds decisions straight back to chat.
+- **Say what you skipped.** Bounded coverage gets a visible line, not silence.
 
 ## Visual craft
 

@@ -108,7 +108,7 @@ Rules for the content:
 - **Render the real lines.** Actual code, not a paraphrase: same trust rule as the sibling.
 - **Escape code as text.** `<`, `>`, `&` inside `.code` are literal: write `&lt;`, `&gt;`, `&amp;`. One unescaped `<` silently eats the rest of the line.
 - **The note card is the canonical text.** The sketch marks + connector say *where*; the note says *what* and is the copy target. Keep each note readable on its own; someone reading only the transcript should still follow the lesson.
-- **Mark with meaning, sparingly.** `circle` to point, `box` for a block, `underline`/`strike` for a single line, `highlight` (hachure swipe) for the one line to remember, `connector` for a relationship. Don't mark every beat the same; don't mark filler.
+- **Mark with meaning, sparingly.** `circle` to point, `box` for a block, `underline`/`strike` for a single line, `highlight` (hachure swipe) for the one line to remember, `connector` for a relationship. Vary the mark to the point, and let the spotlight skip filler lines.
 - **Beats reference `data-ln` values**, so they survive even if you show a slice starting at line 200.
 
 ### 4. Open in the browser
@@ -116,7 +116,7 @@ Rules for the content:
 - macOS: `open <path>` · Linux: `xdg-open <path>` · WSL: `wslview <path>`, else `cmd.exe /c start <path>` · Windows: `start <path>`.
 - Detect via `uname` and `$WSL_DISTRO_NAME`.
 
-If the open command fails (headless / SSH / no `xdg-open`), don't retry blindly; print the absolute path and ask the user to open it: *"브라우저 자동 오픈이 안 돼. 이거 직접 열어줘: /tmp/foo-visual-code-lecture.html"*.
+If the open command fails (headless / SSH / no `xdg-open`), print the absolute path and ask the user to open it: *"브라우저 자동 오픈이 안 돼. 이거 직접 열어줘: /tmp/foo-visual-code-lecture.html"*.
 
 ### 5. Round-trip, then wait in chat
 
@@ -126,7 +126,7 @@ The walkthrough isn't the end: decisions and takeaways come back here.
 - **Click `↩ back`**: a dashed chip pinned to the bottom of the card you *jumped* to (via a clicked card, `↗` chip, dot, line, or `Home`/`End`), labelled by the origin's line (`↩ back to L42`) to match the `↗` chips. Only the most recent jump carries one, and it lives on that single landing card; it never accumulates across jumps or rides along to cards you merely scrolled through. Sequential `◀ ▶` stepping creates none.
 - **Click "copy transcript"**: copies the whole lecture as numbered notes under the subject heading; this is the takeaway export.
 
-Say something like *"강의 페이지 띄웠어. 스크롤 내리면서 보면 돼 (←/→ 로 점프도 됨). 짚고 싶은 노트 눌러서 복붙하든가 transcript 통째로 가져가."* and stop. Don't poll the file.
+Say something like *"강의 페이지 띄웠어. 스크롤 내리면서 보면 돼 (←/→ 로 점프도 됨). 짚고 싶은 노트 눌러서 복붙하든가 transcript 통째로 가져가."* and stop; the user drives from here.
 
 ### 6. After: act, then clean up
 
@@ -135,14 +135,16 @@ Say something like *"강의 페이지 띄웠어. 스크롤 내리면서 보면 �
 
 ## Design discipline
 
-- **Control attention.** The spotlight is the whole reason to exist: one line lit, the rest dimmed. If a beat lights half the file, it's not a beat.
-- **One idea per step.** Two sentences about two lines = two steps.
-- **Lead with the point, then trim.** Every note is BLUF (bottom line up front (두괄식), takeaway first) and clear, concise, elegant. Re-read each one before shipping; reading only the first lines in sequence should still teach the flow.
-- **Order by the logic, not the layout.** Walk the path the code runs, not top-to-bottom by default.
-- **Fidelity over summary.** Render the real lines; a paraphrased lecture is untrustworthy.
-- **One file, no build, no CDN.** Inline everything, the sketch renderer included. It has to open on a double-click and survive being copied elsewhere.
-- **Always round-trip.** Note-card copy + transcript export, so the lesson leaves the page. A walkthrough you can't carry away is a dead end.
-- **Say what you skipped.** If you walked only the hot path, put it in the page.
+Before you ship, re-check these, each defined in the steps above:
+
+- **Control attention.** One line lit, the rest dimmed; a beat that lights half the file isn't a beat.
+- **One idea per step.** Two lines worth two sentences are two steps.
+- **Lead with the point.** Every note is BLUF; reading only the first lines in sequence should teach the flow.
+- **Order by the logic**, not the layout.
+- **Fidelity over summary.** Render the real lines.
+- **One file, no build, no CDN.** The sketch renderer inlined too.
+- **Round-trip every note.** Card copy plus transcript export.
+- **Say what you skipped.**
 
 ## Visual craft
 

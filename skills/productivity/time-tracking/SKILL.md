@@ -1,15 +1,15 @@
 ---
 name: time-tracking
-description: Track per-session work time on freelance/personal projects with automatic timestamps, timezone, and category breakdowns. Supports multiple open sessions via switch / pause+resume / concurrent. Use whenever the user wants to start, end, pause, resume, switch, analyze, or invoice a work session — including phrases like "시작", "끝", "일시정지", "재개", "전환", "갈아타", "타임 트래킹 시작", "세션 종료", "이번 주 분석", "분석해줘", "<client> 청구서", "start tracking", "end session", "pause session", "resume", "switch to <project>", "analyze hours", "invoice for X", or simply invoking the skill via /time-tracking. Triggers on any work-session timing intent, even if the user doesn't say "track" or "skill" explicitly.
+description: Track per-session work time on freelance/personal projects with automatic timestamps, timezone, and category breakdowns. Supports multiple open sessions via switch / pause+resume / concurrent. Use whenever the user wants to start, end, pause, resume, switch, analyze, or invoice a work session, including phrases like "시작", "끝", "일시정지", "재개", "전환", "갈아타", "타임 트래킹 시작", "세션 종료", "이번 주 분석", "분석해줘", "<client> 청구서", "start tracking", "end session", "pause session", "resume", "switch to <project>", "analyze hours", "invoice for X", or simply invoking the skill via /time-tracking. Triggers on any work-session timing intent, even if the user doesn't say "track" or "skill" explicitly.
 ---
 
 # Time Tracking
 
 Records work sessions to per-project `project_time_tracking.md` files. Designed for solo freelance/personal work where the goal is:
 
-1. **Retrospective analysis** — "How much time did I spend on debugging this month?"
-2. **Client invoicing** — generate billable totals using rates from `~/.claude/billing_rates.md`
-3. **Zero friction** — auto-capture timestamps, timezone, project; user only supplies what can't be inferred
+1. **Retrospective analysis**: "How much time did I spend on debugging this month?"
+2. **Client invoicing**: generate billable totals using rates from `~/.claude/billing_rates.md`
+3. **Zero friction**: auto-capture timestamps, timezone, project; user only supplies what can't be inferred
 
 ## Invocation
 
@@ -33,19 +33,19 @@ If `/time-tracking` is invoked with no further input, default to `status`. After
 
 ## Asking questions
 
-For any step that picks among a fixed set of choices, use the **AskUserQuestion** tool instead of printing the options as text — so the user selects or presses a number rather than typing the answer. This covers the §"Session conflict subflow" and §"Stale-session subflow", the "which session?" pickers in `end` / `pause` / `resume` / `discard`, and "Mark all as invoiced?".
+For any step that picks among a fixed set of choices, use the **AskUserQuestion** tool instead of printing the options as text: so the user selects or presses a number rather than typing the answer. This covers the §"Session conflict subflow" and §"Stale-session subflow", the "which session?" pickers in `end` / `pause` / `resume` / `discard`, the `end` category-proposal confirm (그대로 / 수정), and "Mark all as invoiced?".
 
 The lettered blocks in this spec are the option *content*, not a literal prompt: map each letter to one AskUserQuestion option (label = the short choice, description = what it does), keep the order, and put any context the user needs to decide (elapsed time, conflicting sessions) in the question text.
 
 Two carve-outs stay as typed prompts:
-- **Free-text input** — the `end` combined prompt (category %, shipped / slipped lines) and any `HH:MM` / date entry can't be enumerated.
-- **Destructive `(y/N)` confirmations** — `discard` and the stale (c) "폐기" branch keep the typed `(y/N)` gate; the friction is deliberate for an irreversible delete.
+- **Free-text input**: the `end` combined prompt (category %, shipped / slipped lines) and any `HH:MM` / date entry can't be enumerated.
+- **Destructive `(y/N)` confirmations**: `discard` and the stale (c) "폐기" branch keep the typed `(y/N)` gate; the friction is deliberate for an irreversible delete.
 
 If AskUserQuestion isn't available in the current context, fall back to printing the lettered block and waiting for a typed reply.
 
 ## Sub-action: `start`
 
-1. **Capture start time**: run `date -u +"%Y-%m-%dT%H:%M:%SZ"` for UTC ISO, then `date +"%H:%M %Z"` for local display. Read system timezone via `date +%Z` and full TZ name via `readlink /etc/localtime | sed 's|.*/zoneinfo/||'` (macOS/Linux). Don't ask the user — read it.
+1. **Capture start time**: run `date -u +"%Y-%m-%dT%H:%M:%SZ"` for UTC ISO, then `date +"%H:%M %Z"` for local display. Read system timezone via `date +%Z` and full TZ name via `readlink /etc/localtime | sed 's|.*/zoneinfo/||'` (macOS/Linux); read it from the system rather than asking the user.
 
 2. **Auto-detect project**:
    - Run `pwd`.
@@ -57,10 +57,11 @@ If AskUserQuestion isn't available in the current context, fall back to printing
    - Encoding: `pwd` with `/` replaced by `-`, leading `-` kept. E.g. `/Users/me/projects/example-app` → `-Users-me-projects-example-app`.
    - If `memory/` dir doesn't exist, create it.
    - If tracking file doesn't exist, create it with the header from `templates/tracking_file_header.md`.
+   - If the user names a different path (legacy or preference), use it and store the override in the session state.
 
 4. **Check for existing sessions**: read `~/.claude/time-tracking-state.json`.
    - If `sessions` list is empty, proceed to step 5.
-   - If a session for the **same project** is already `active`, tell user `이미 진행 중: <project> (Xh Ym)` and stop. Do not silently open a duplicate.
+   - If a session for the **same project** is already `active`, tell user `이미 진행 중: <project> (Xh Ym)` and stop: one active session per project.
    - If a session for the **same project** is `paused`, offer:
      ```
      <project>이 일시정지 상태야 (누적 Xh Ym, 마지막 멈춤 HH:MM).
@@ -68,11 +69,11 @@ If AskUserQuestion isn't available in the current context, fall back to printing
        (b) 새 세션으로 따로 시작 (드물게 — 기존 paused는 그대로 둠)
        (c) 취소
      ```
-   - If sessions exist on **different projects**, first **check for staleness**: compute each session's `latest_activity` from its segments (active → latest `segments[-1].start_iso`; paused → latest `segments[-1].end_iso`). A session is stale if `now - latest_activity > 12h`. If at least one stale session is found, route to the §"Stale-session subflow" (which handles cleanup, not live switching). Otherwise route to the §"Session conflict subflow" (which assumes both sessions are alive). State file mtime is not used — staleness is per-session, so opening a new session doesn't hide another's staleness.
+   - If sessions exist on **different projects**, first **check for staleness**: compute each session's `latest_activity` from its segments (active → latest `segments[-1].start_iso`; paused → latest `segments[-1].end_iso`). A session is stale if `now - latest_activity > 12h`. If at least one stale session is found, route to the §"Stale-session subflow" (which handles cleanup, not live switching). Otherwise route to the §"Session conflict subflow" (which assumes both sessions are alive). State file mtime is not used: staleness is per-session, so opening a new session doesn't hide another's staleness.
 
 5. **Read previous slipped** (optional context): from same-project tracking file, find the most recent entry, extract `slipped:` line if present.
 
-6. **Write state file**: append a new session object to the `sessions` list (see schema in §"State file"). Don't overwrite existing entries — the list can hold multiple.
+6. **Write state file**: append a new session object to the `sessions` list (see schema in §"State file"). Don't overwrite existing entries: the list can hold multiple.
 
 7. **Confirm to user** (concise):
    ```
@@ -96,19 +97,19 @@ Show:
   (d) 취소
 ```
 
-- **(a) switch**: run the §"Switch shortcut mode" of `end` on the existing session — ask only for `shipped` (one line). Other fields filled as `TBD` for later edit. Then proceed with the new `start`.
-- **(b) pause**: run the §"Sub-action: pause" flow for the existing session (no questions — pure state change). Then proceed with the new `start`.
-- **(c) concurrent**: leave existing sessions untouched. Append the new session to the active list. Proceed with the new `start`. **Heads up**: project auto-detection still uses current `pwd`. If the user is still cd'd into the existing project's directory, they must pass the new project name explicitly (`start <new-project>`) or cd first — otherwise the new "concurrent" session will write into the old project's tracking file.
+- **(a) switch**: run the §"Switch shortcut mode" of `end` on the existing session: ask only for `shipped` (one line). Other fields filled as `TBD` for later edit. Then proceed with the new `start`.
+- **(b) pause**: run the §"Sub-action: pause" flow for the existing session (no questions: pure state change). Then proceed with the new `start`.
+- **(c) concurrent**: leave existing sessions untouched. Append the new session to the active list. Proceed with the new `start`. **Heads up**: project auto-detection still uses current `pwd`. If the user is still cd'd into the existing project's directory, they must pass the new project name explicitly (`start <new-project>`) or cd first: otherwise the new "concurrent" session will write into the old project's tracking file.
 - **(d) cancel**: abort the new start. Existing sessions unchanged.
 
 If multiple sessions are already in state:
 - List all of them grouped by status (active first, then paused), each with its current elapsed time.
 - Ask the user how to resolve each one individually, OR offer "전부 같은 선택?" to apply one choice to all.
-- Choices apply only where they make sense: (a) switch and (b) pause act on `active` sessions only — `paused` ones are left untouched unless explicitly named in a follow-up.
+- Choices apply only where they make sense: (a) switch and (b) pause act on `active` sessions only: `paused` ones are left untouched unless explicitly named in a follow-up.
 
 ### Stale-session subflow
 
-Triggered from `start` when one or more existing sessions look abandoned (last segment started >12h ago AND state file mtime >12h ago). Don't show the live conflict choices — they assume the user is mid-flow on the old session, which they're not. Instead:
+Triggered from `start` when one or more existing sessions look abandoned (last segment started >12h ago AND state file mtime >12h ago). Don't show the live conflict choices: they assume the user is mid-flow on the old session, which they're not. Instead:
 
 ```
 ⚠️ <existing-project> 세션이 안 닫혀있어:
@@ -124,7 +125,7 @@ Triggered from `start` when one or more existing sessions look abandoned (last s
 
 - **(a) estimate**: run §"Sub-action: end" on the existing session with end time = state file mtime. Use the **switch shortcut mode** prompt (shipped only, others `TBD`) but additionally add `- needs-edit: end-time (estimated from state mtime)` to the entry so the user can grep for and correct it later. Then proceed with the new `start`.
 - **(b) manual**: prompt for an `HH:MM` (assume same date as the session's start unless user qualifies with "어제"/"yesterday" or an explicit date). Run §"Sub-action: end" with that time. Same switch-shortcut prompt for the other fields.
-- **(c) discard**: same y/N gate as standalone §"Sub-action: discard" — show `<existing-project> 폐기? 시작 <HH:MM> <TZ>, 누적 Xh Ym. (y/N)` first. On `y`, drop the session from state without writing any entry and confirm `<existing-project> 폐기됨.` On `N`, fall back to the stale menu. Then proceed with the new `start`.
+- **(c) discard**: same y/N gate as standalone §"Sub-action: discard": show `<existing-project> 폐기? 시작 <HH:MM> <TZ>, 누적 Xh Ym. (y/N)` first. On `y`, drop the session from state without writing any entry and confirm `<existing-project> 폐기됨.` On `N`, fall back to the stale menu. Then proceed with the new `start`.
 - **(d) actually alive**: fall through to the §"Session conflict subflow" with its normal choices.
 
 If multiple stale sessions exist, ask per-session, OR offer "전부 폐기" / "전부 mtime으로 종료" shortcuts.
@@ -137,18 +138,18 @@ If multiple stale sessions exist, ask per-session, OR offer "전부 폐기" / "�
    - Else if multiple active sessions exist, list them and ask: `어느 세션 끝낼까? (a) <project-A> (b) <project-B> ...`.
    - Else if no sessions at all, tell user `진행 중인 세션 없어` and stop.
 
-2. **Capture end time**: same as start. If the user passed `--at <time>` (or natural-language equivalents like "어제 17:00" / "at 5pm"), parse to ISO using the session's TZ. Must be ≥ the last segment's start_iso — otherwise error and ask again. Show the parsed result back to the user before writing: `종료 시각: 2026-05-19 17:00 ICT — 맞아?`
+2. **Capture end time**: same as start. If the user passed `--at <time>` (or natural-language equivalents like "어제 17:00" / "at 5pm"), parse to ISO using the session's TZ. Must be ≥ the last segment's start_iso: otherwise error and ask again. Show the parsed result back to the user before writing: `종료 시각: 2026-05-19 17:00 ICT, 맞아?`
 
-3. **Compute duration**: sum of `(segment.end - segment.start)` for each segment in the session, with the final open segment's end set to the capture time. Hours, 2 decimal places. If the session was ever paused (more than one segment), also compute the paused gap = `(end of session window) - (sum of segments)`, formatted as `Xh Ym` for the entry note (not decimal hours — the gap is auxiliary info, not billable time).
+3. **Compute duration**: sum of `(segment.end - segment.start)` for each segment in the session, with the final open segment's end set to the capture time. Hours, 2 decimal places. If the session was ever paused (more than one segment), also compute the paused gap = `(end of session window) - (sum of segments)`, formatted as `Xh Ym` for the entry note (not decimal hours: the gap is auxiliary info, not billable time).
 
 4. **Date boundary check**: if the session's first start date ≠ end date, split into multiple entries (one per date, with midnight as the split point). Run the rest of this flow for each split. For multi-segment sessions, attribute each segment to its own date first, then merge same-date segments.
 
-5. **Ask user for the parts that can't be inferred** (one combined prompt):
+5. **Propose the category split; ask the rest** (one combined prompt). Estimate the category % yourself from the session's actual work (the conversation, files touched, commands run): keys from the 8 allowed, sum ~100, 5–10 unit granularity. Present it as a decided proposal and ask only whether to adjust it. The other fields stay open questions.
    ```
    16:45 ICT, 2.25h.
 
-   카테고리 % (총 100, 5–10 단위)? 직전 같은 project 분포 참고:
-     infra 30, decisions 25, meta 20, debugging 15, other 10
+   카테고리 (제안): infra 30, decisions 25, meta 20, debugging 15, other 10
+   이대로 갈까? 바꿀 거 있으면 말해줘.
 
    Shipped (한 줄)?
    Slipped (있으면)?
@@ -156,11 +157,11 @@ If multiple stale sessions exist, ask per-session, OR offer "전부 폐기" / "�
    Billable client (없으면 'none')?
    ```
 
-   Show previous-session category distribution as reference, not as suggestion.
+   Write the entry only once the categories are explicitly confirmed. Gate the proposal through **AskUserQuestion** (그대로 / 수정): on 그대로, keep it; on 수정, take the new split. If the reply is ambiguous, ask once more (`카테고리 이대로 갈까?`) before writing, rather than assuming acceptance.
 
 6. **Validate categories**: keys must be from the 8 allowed (`planning`, `design`, `decisions`, `implementation`, `debugging`, `infra`, `meta`, `other`). Sum should be ~100 (allow 95–105). If invalid, ask again.
 
-7. **Build entry** using the format in §"Entry format" below.
+7. **Build entry** using the format in `references/entry-format.md`.
 
 8. **Append to tracking file**:
    - Find the `### YYYY-MM-DD` header for the entry's date.
@@ -175,14 +176,14 @@ If multiple stale sessions exist, ask per-session, OR offer "전부 폐기" / "�
 
 Triggered by the §"Session conflict subflow" picking (a), or by the user invoking `switch <new-project>` directly (see §"Sub-action: switch").
 
-Behaves like `end` but with a minimal prompt — only `shipped` is asked. Other fields are filled as placeholders for later manual edit:
+Behaves like `end` but with a minimal prompt: only `shipped` is asked. Other fields are filled as placeholders for later manual edit:
 
 - `cat`: `TBD` (no key/pct pairs)
 - `slipped`: omitted
 - `retro`: omitted
 - `billable`: `TBD`
 
-Entry is still written and the session is removed from state, but the entry includes a trailing sub-bullet: `- needs-edit: cat, billable` so the user can grep for incomplete entries later. The switch confirmation tells the user which entry to edit, e.g. `<HH:MM> <TZ>, <project> 마감 (draft — categories/billable 나중에 편집).`
+Entry is still written and the session is removed from state, but the entry includes a trailing sub-bullet: `- needs-edit: cat, billable` so the user can grep for incomplete entries later. The switch confirmation tells the user which entry to edit, e.g. `<HH:MM> <TZ>, <project> 마감 (draft: categories/billable 나중에 편집).`
 
 ## Sub-action: `status`
 
@@ -211,13 +212,13 @@ Entry is still written and the session is removed from state, but the entry incl
 
 ## Sub-action: `pause [project]`
 
-1. Read state. Pick target session (same rules as `end` step 1, but only `active` sessions are eligible — if all are paused, say so and stop).
+1. Read state. Pick target session (same rules as `end` step 1, but only `active` sessions are eligible: if all are paused, say so and stop).
 2. Capture pause time (same `date` calls as `start`).
 3. Close the open segment: set its `end_iso` to the pause time.
 4. Set the session's `status` to `paused`.
 5. Confirm: `<HH:MM> <TZ>, <project> 일시정지 (누적 Xh Ym).`
 
-No questions are asked — this is a pure state change. Categories, shipped, etc. are deferred to `end`.
+No questions are asked: this is a pure state change. Categories, shipped, etc. are deferred to `end`.
 
 ## Sub-action: `resume [project]`
 
@@ -241,18 +242,18 @@ Shortcut for "close the current session quickly and start a new one." Equivalent
 2. If exactly one active session exists, run §"Switch shortcut mode" of `end` on it, then `start` the new project.
 3. If multiple active sessions exist, ask which one to switch from (or whether to close all). Then proceed.
 
-If the user just says `switch` with no project name, prompt for one. Don't infer from cwd here — `switch` is an explicit intent.
+If the user just says `switch` with no project name, prompt for one. Don't infer from cwd here: `switch` is an explicit intent.
 
 ## Sub-action: `discard [project]`
 
 Drops a session from state without writing any tracking-file entry. For when the user realizes a session was opened by accident or was forgotten and the time is lost beyond recovering.
 
-1. Read state. Pick target (same rules as `end` — explicit project name, else single session, else list and ask).
+1. Read state. Pick target (same rules as `end`: explicit project name, else single session, else list and ask).
 2. **Confirm before destroying** (this is unrecoverable): `<project> 폐기? 시작 <HH:MM> <TZ>, 누적 Xh Ym. (y/N)`
 3. On `y`, remove the session from the `sessions` list. Confirm: `<project> 폐기됨.`
 4. On `N` or anything else, abort.
 
-Unlike `end`, `discard` writes nothing to the tracking file — the session's time is forgotten on purpose.
+Unlike `end`, `discard` writes nothing to the tracking file: the session's time is forgotten on purpose.
 
 ## Sub-action: `analyze [period]`
 
@@ -260,9 +261,7 @@ Unlike `end`, `discard` writes nothing to the tracking file — the session's ti
 
 2. **Glob tracking files**: `~/.claude/projects/*/memory/project_time_tracking.md`.
 
-3. **Parse entries** from all files. Support both formats:
-   - **Slim** (current): `- HH:MM–HH:MM <TZ> (X.XXh) — <Project> | <Phase>`
-   - **Legacy verbose**: `- Window: HH:MM–HH:MM <TZ> (~X.Xh)` with separate fields below
+3. **Parse entries** from all files, both formats, per `references/entry-format.md`.
 
 4. **Filter** by date range.
 
@@ -341,22 +340,6 @@ Unlike `end`, `discard` writes nothing to the tracking file — the session's ti
 
 Defaults: `analyze` → `this-week`, `invoice` → `this-month`.
 
-## Entry format
-
-```
-- HH:MM–HH:MM <TZ> (X.XXh) — <Project> | <Phase or Task>
-  - tags: tool:<tool>, location:<loc>, billable:<client-or-none>
-  - cat: <key> <pct>, <key> <pct>, ...
-  - shipped: <one line>
-  - slipped: <one line>          # omit if empty
-  - retro: <file>, <file>        # omit if empty
-  - needs-edit: <field>, <field> # omit if entry is complete (added by switch shortcut)
-```
-
-Indent: 2 spaces for sub-bullets. No blank lines between sub-bullets.
-
-**Pause/resume sessions**: the window on the first line stays `<first-segment-start>–<last-segment-end>` for human readability, but the `(X.XXh)` duration is the sum of segments (excluding paused gaps). If a session was paused at any point, append a `paused Yh Ym` note inside the parens: `(2.30h, paused 1h 15m)`. Parsers should accept both `(X.XXh)` and `(X.XXh, paused …)`.
-
 ## Categories (fixed, 8)
 
 | Key | When |
@@ -398,9 +381,9 @@ Path: `~/.claude/time-tracking-state.json`
 }
 ```
 
-The `sessions` list can hold multiple entries. Each session is independent — it has its own segments, status (`active` or `paused`), and tracking file.
+The `sessions` list can hold multiple entries. Each session is independent: it has its own segments, status (`active` or `paused`), and tracking file.
 
-**Staleness derivation**: there is no stored `last_touched` field. Compute it on demand from segments — active session: latest `segments[-1].start_iso`; paused session: latest `segments[-1].end_iso`. Every meaningful mutation already writes a segment (start opens segment 0, pause closes the open one, resume appends a new open one), so the segment timestamps capture the same information without duplication.
+**Staleness derivation**: there is no stored `last_touched` field. Compute it on demand from segments: active session: latest `segments[-1].start_iso`; paused session: latest `segments[-1].end_iso`. Every meaningful mutation already writes a segment (start opens segment 0, pause closes the open one, resume appends a new open one), so the segment timestamps capture the same information without duplication.
 
 **Segments**: a session is a list of `{start_iso, end_iso}` segments. The currently-open segment has `end_iso: null`. Pausing closes the open segment (set `end_iso` to now) and flips `status` to `paused`. Resuming appends a new `{start_iso: now, end_iso: null}` and flips `status` back to `active`. Duration = sum of `(end - start)` across all segments, with `null` end treated as "now" for live computation.
 
@@ -416,54 +399,16 @@ Path: `~/.claude/billing_rates.md` (user-created; Skill reads only).
 
 Template: `templates/billing_rates.example.md`.
 
-## Tracking file location
-
-Per-project: `~/.claude/projects/<encoded-cwd>/memory/project_time_tracking.md`.
-
-Encoding: replace `/` with `-` in absolute pwd. E.g. `/Users/me/projects/example-app` → `-Users-me-projects-example-app`.
-
-If a project's tracking file lives elsewhere (legacy or user preference), user can specify it when starting (e.g. "start, tracking file at <path>"). Override stored in state for the session.
-
-## Parsing rules for existing entries
-
-When analyzing or invoicing, parse both formats from the same file:
-
-**Slim format** (preferred):
-```
-- HH:MM–HH:MM <TZ> (X.XXh) — <Project> | <Phase>
-  - tags: ...
-  - cat: ...
-```
-
-**Legacy verbose** (pre-Skill entries):
-```
-- Window: HH:MM–HH:MM <TZ> (~X.Xh)
-- Location: ...
-- Tool: ...
-- Categories: cat A%, cat B%, ...
-- Shipped: ...
-```
-
-Extract:
-- duration (hours)
-- date (from parent `### YYYY-MM-DD` header)
-- categories (as `{key: pct}` map; `TBD` means unset — exclude from category aggregation but still count toward total hours)
-- tool / location / billable (from tags or legacy fields; `TBD` billable means unset — exclude from any client filter)
-- paused gap (optional, parsed from `(X.XXh, paused Yh Ym)` — informational only, doesn't affect totals)
-- `needs-edit:` sub-bullet (informational; `analyze` should append a footnote like `Note: N draft entries need editing (cat or billable TBD)` so the user remembers to come back)
-
-Both legacy and slim entries can coexist in the same file. New entries always written in slim format.
-
 ## Tone and behavior
 
-- **Don't fabricate numbers**. Category % must come from the user. Never guess silently.
-- **Don't overstate**. Confirmations are dry: `<HH:MM> <TZ>, <project> 시작.` not "🚀 시작합니다!"
-- **Show inferred values**. When auto-detecting project from cwd or splitting across date boundary, show the user what was inferred and let them override.
-- **Korean or English**: match the user's language for confirmations.
-- **Never show fake slash commands**. The only real slash invocation is `/time-tracking`. Sub-actions (`start`, `end`, `pause`, `resume`, `switch`, `discard`, `status`, `analyze`, `invoice`) are natural-language words, not slash commands — don't invent `/start`, `/end`, etc.
+- **Category % is proposed, then confirmed**. Estimate the split from the session's actual work, present it as a proposal, and proceed on the user's OK; apply their adjustment only if they want one.
+- **Keep confirmations dry**. `<HH:MM> <TZ>, <project> 시작.`, not "🚀 시작합니다!"
+- **Show inferred values**. When auto-detecting project from cwd or splitting across a date boundary, show the user what was inferred and let them override.
+- **Match the user's language** for confirmations (Korean or English).
+- **Only `/time-tracking` is a slash command**. The sub-actions (`start`, `end`, `pause`, `resume`, `switch`, `discard`, `status`, `analyze`, `invoice`) are natural-language words.
 - **One-line confirmations for state changes**. `pause`, `resume`, `discard`, `switch` write nothing to the tracking file (except `switch`'s draft entry). Confirmations stay to one line, matching the dryness of `start`/`end`: e.g. `<HH:MM> <TZ>, <project> 일시정지 (누적 Xh Ym).`
-- **Confirm before destructive action**. `discard` and the stale-session (c) "폐기" branch destroy time data permanently. Always show a `(y/N)` prompt with the time about to be lost — never act on first invocation.
-- **Don't hardcode project or client names in prompts**. Use `<project>`, `<client>`, `<HH:MM>` placeholders. The names get filled at runtime from state — putting a literal name like "MyApp" or "MyClientApp" into the spec's prompt text makes it read like it's wired for one user.
+- **Confirm before destructive action**. `discard` and the stale-session (c) "폐기" branch destroy time data permanently: always show a `(y/N)` prompt with the time about to be lost, and act only on an explicit `y`.
+- **Use `<project>` / `<client>` / `<HH:MM>` placeholders** in prompts; the names fill at runtime from state.
 
 ## Edge cases
 
@@ -473,9 +418,9 @@ Both legacy and slim entries can coexist in the same file. New entries always wr
 - **`billing_rates.md` has a client in "Archived"**: still resolvable for historical invoices but warn user.
 - **Category sum 95–105**: accept and normalize internally. <95 or >105: ask user to fix.
 - **Very short session (<5 min)**: still record. User decides if it's meaningful.
-- **Pause spans midnight**: when an open segment crosses midnight, the date-boundary split in `end` step 4 still applies to each individual segment. A session with segments `[09:00–13:00 day-N, 22:00–01:30 day-N+1]` produces three entries: full day-N (12:00 chunk + 22:00–24:00), and 00:00–01:30 on day-N+1. The paused gap (13:00–22:00) is just ignored — it belongs to no day.
+- **Pause spans midnight**: when an open segment crosses midnight, the date-boundary split in `end` step 4 still applies to each individual segment. A session with segments `[09:00–13:00 day-N, 22:00–01:30 day-N+1]` produces three entries: full day-N (12:00 chunk + 22:00–24:00), and 00:00–01:30 on day-N+1. The paused gap (13:00–22:00) is just ignored: it belongs to no day.
 - **Forgotten / abandoned session**: handled by the §"Stale-session subflow" of `start`, and visible via the staleness flag in `status`. The user can also invoke `discard <project>` or `end <project> --at <time>` directly without going through `start`.
-- **Concurrent sessions overlapping in wall time**: deliberately allowed — the spec records the literal segments and `analyze` sums them straight. If you billed 2h to client A and 2h to client B in the same 13:00–15:00 window, total comes out as 4h. See §"What this Skill does NOT do" for the analyze-side caveat.
+- **Concurrent sessions overlapping in wall time**: deliberately allowed: the spec records the literal segments and `analyze` sums them straight. If you billed 2h to client A and 2h to client B in the same 13:00–15:00 window, total comes out as 4h. See §"What this Skill does NOT do" for the analyze-side caveat.
 
 ## What this Skill does NOT do
 
@@ -484,5 +429,5 @@ Both legacy and slim entries can coexist in the same file. New entries always wr
 - Sync with external trackers (Toggl, Harvest)
 - Pomodoro / notifications
 - Migrating legacy entries to slim format (kept as-is, parsed compatibly)
-- Auto-recovery of forgotten sessions — stale sessions (>12h) are flagged in `status` and on next `start`, but never silently closed; user picks the resolution
-- Overlap deduplication in `analyze` — two concurrent sessions in the same wall-clock window are both summed into the total. Future: surface a `Note: Xh of overlap across N concurrent sessions` line under the total so the user notices.
+- Auto-recovery of forgotten sessions: stale sessions (>12h) are flagged in `status` and on next `start`, but never silently closed; user picks the resolution
+- Overlap deduplication in `analyze`: two concurrent sessions in the same wall-clock window are both summed into the total. Future: surface a `Note: Xh of overlap across N concurrent sessions` line under the total so the user notices.

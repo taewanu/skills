@@ -108,7 +108,7 @@ Rules for the content:
 - **Render the real lines.** Actual code, not a paraphrase: same trust rule as the sibling.
 - **Escape code as text.** `<`, `>`, `&` inside `.code` are literal: write `&lt;`, `&gt;`, `&amp;`. One unescaped `<` silently eats the rest of the line.
 - **The note card is the canonical text.** The sketch marks + connector say *where*; the note says *what* and is the copy target. Keep each note readable on its own; someone reading only the transcript should still follow the lesson.
-- **Mark with meaning, sparingly.** `circle` to point, `box` for a block, `underline`/`strike` for a single line, `highlight` (hachure swipe) for the one line to remember, `connector` for a relationship. Vary the mark to the point, and let the spotlight skip filler lines.
+- **Mark with meaning, sparingly.** `circle` to point, `box` for a block, `underline`/`strike` for a single line, `highlight` (hachure swipe) for the one line to remember, `connector` for a relationship. Vary the mark to the point, and mark only the lines that carry the insight.
 - **Beats reference `data-ln` values**, so they survive even if you show a slice starting at line 200.
 
 ### 4. Open in the browser

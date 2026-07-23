@@ -1,0 +1,21 @@
+{
+  "name": "taewanu",
+  "description": "Taewan Lim's personal Claude Code skills.",
+  "owner": {
+    "name": "Taewan Lim"
+  },
+  "plugins": [
+    {
+      "name": "taewanu-skills",
+      "source": "./",
+      "description": "Personal Claude Code skills for freelance and product engineering work — visual decision pages, perspective-shifting reviews, and work-session tracking.",
+      "category": "productivity",
+      "keywords": [
+        "skills",
+        "html",
+        "ux-review",
+        "time-tracking"
+      ]
+    }
+  ]
+}

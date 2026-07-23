@@ -59,7 +59,7 @@ Mark what you're unsure about as a **question**, not a finding. Honesty is what 
 
 The **chrome** (colors, spacing, which sections appear, diagram style) is yours to tweak for the material. If the content needs something the template lacks (a sequence diagram, a state machine, a before/after toggle, a small perf table), **add it**; the template is a starting point, not the final form. If you make the same addition twice across invocations, fold it back into the template so it stops going stale.
 
-The page ships with a **sticky toolbar**: a file-list collapse toggle on the left, then **Unified/Split**, **Wrap**, and **Whitespace** (shows `·` / `→` on demand; it never strips), and a light/dark **Theme** toggle on the right, over a stats line reading `N files · +X −Y · head → base`. It's all pre-wired; you only fill the stats.
+The toolbar is fully pre-wired; you only fill the stats line it sits over: `N files · +X −Y · head → base`.
 
 Save to `/tmp/<project-slug>-visual-code-review.html`. Slug = `basename $PWD` lower-cased, non-alphanumeric → `-`, collapsed; fall back to `code` if empty.
 

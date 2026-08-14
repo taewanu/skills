@@ -55,7 +55,7 @@ fi
 ctx_c=$(awk -v p="$used_pct" 'BEGIN { print (p > 75) ? 202 : (p > 50) ? 214 : 33 }')
 printf '\033[1;38;5;%sm%s\033[0m \033[2m(%.1f%%)\033[0m' "$ctx_c" "$tok_k" "$used_pct"
 
-# Zoned 4/2/2 gauge whose unfilled amber/ember cells stay dimly marked so the zones read at any fill.
+# Zoned 4/2/2 gauge whose unfilled cells keep a dimmed zone tint so the zones read at any fill.
 bar() {
   awk -v pct="$1" -v label="$2" -v reset="$3" -v now="$4" 'BEGIN{
     w = 8
@@ -64,7 +64,7 @@ bar() {
     printf "\033[2m%s\033[0m ", label
     for (i = 1; i <= w; i++) {
       zone = (i <= 4) ? 33 : (i <= 6) ? 214 : 202
-      mark = (i <= 4) ? 237 : (i <= 6) ? 136 : 130
+      mark = (i <= 4) ? 25 : (i <= 6) ? 136 : 130
       if (i <= filled) printf "\033[38;5;%dm\342\226\260", zone
       else printf "\033[38;5;%dm\342\226\261", mark
     }

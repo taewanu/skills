@@ -23,13 +23,13 @@ Fable 5  ·  186.0k (19.0%)  ·  5h ▱▱▱▱▱▱▱▱ 5% ↻1h  ·  wk �
 
 | Zone | Cells | Range | Fill color | Unfilled marker |
 |---|---|---|---|---|
-| ocean | 1–4 | ≤50% | 33 `#0087ff` | 237 (plain track) |
+| ocean | 1–4 | ≤50% | 33 `#0087ff` | 25 (dim ocean) |
 | amber | 5–6 | 50–75% | 214 `#ffaf00` | 136 (dim amber) |
 | ember | 7–8 | >75% | 202 `#ff5f00` | 130 (dim ember) |
 
-Unfilled amber/ember cells stay visible as dim markers so the three-part division reads at any fill level (fuel-gauge red-zone idea). The percent text is thresholded on the value itself (amber above 50, ember above 75) like the context count, so at 51% the number reads amber before an amber cell lights. Segments divide with a dim `·` in two-space gaps.
+Every unfilled cell keeps its zone color darkened one xterm step, so the three-part division reads at any fill level (fuel-gauge red-zone idea). The percent text is thresholded on the value itself (amber above 50, ember above 75) like the context count, so at 51% the number reads amber before an amber cell lights. Segments divide with a dim `·` in two-space gaps.
 
-`references/red-zone-palette.html` and `references/zone-proportions.html` are the visual-ui-compare pages these decisions came from; `references/design-decisions.md` records the rationale.
+`references/red-zone-palette.html`, `references/zone-proportions.html`, and `references/empty-blue.html` are the visual-ui-compare pages these decisions came from; `references/design-decisions.md` records the rationale.
 
 ## Install
 

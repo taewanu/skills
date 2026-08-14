@@ -12,7 +12,11 @@ Picked from DeepSkyBlue 39, Turquoise 45, DodgerBlue 33, SkyBlue3 74 (see `red-z
 
 ## Warning model: staged 3-color
 
-Staged fill colors (ocean 33 → amber 214 → ember 202) beat every 2-color zone variant. Unfilled warning cells keep dim markers (136 dim amber, 130 dim ember) so the three-part division is visible at any fill level: the fuel-gauge red-zone idea.
+Staged fill colors (ocean 33 → amber 214 → ember 202) beat every 2-color zone variant. Unfilled cells keep dim markers so the three-part division is visible at any fill level: the fuel-gauge red-zone idea.
+
+## Unfilled ocean cells: dim ocean 25 `#005faf`
+
+Ocean's unfilled track was neutral 237 while amber and ember already carried a tint, so the empty left half read as absent rather than as a zone. Dim ocean 25 is the exact analogue of the warning markers: 214 → 136 and 202 → 130 each darken one xterm step per channel, and the same step on 33 `#0087ff` lands on 25. Rejected (see `empty-blue.html`): 24 `#005f87` too dark and green; 18 and 17 read as near-black; 61 and 67 sit close enough to the fill color to be mistaken for filled cells.
 
 ## Proportions: 4/2/2 on 8 cells
 

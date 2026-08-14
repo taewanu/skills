@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Statusline — blue unfilled cells</title>
+<title>Statusline — unfilled ocean cells</title>
 <style>
   :root {
     --bg: #14161a;
@@ -10,6 +10,8 @@
     --fg: #d6dae0;
     --muted: #6b7280;
     --line: #262a31;
+    --accent: #7fd1a0;
+    --accent-ink: #10231a;
   }
   * { box-sizing: border-box; }
   body {
@@ -22,22 +24,36 @@
   h1 { font-size: 15px; font-weight: 600; margin: 0 0 6px; letter-spacing: .02em; }
   .sub { color: var(--muted); margin: 0 0 32px; font-size: 12px; }
   .variant { margin-bottom: 30px; border-top: 1px solid var(--line); padding-top: 14px; }
-  .vhead { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+  .vhead { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
   .vname { font-weight: 600; }
   .vmeta { color: var(--muted); font-size: 11px; }
-  .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px; }
+  .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; }
   .rows { background: var(--panel); border-radius: 6px; padding: 12px 14px; overflow-x: auto; }
   .row { white-space: nowrap; padding: 3px 0; }
   .dim { color: var(--muted); }
   .cell { letter-spacing: .5px; }
-  .rec { color: #7fd1a0; font-size: 11px; }
+  .rec { color: var(--accent); font-size: 11px; }
+  .pick-btn {
+    all: unset; cursor: pointer;
+    padding: 4px 10px; border-radius: 999px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 11px;
+    font-family: ui-monospace, "SF Mono", monospace;
+    line-height: 1;
+    margin-left: auto;
+    transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+  }
+  .pick-btn:hover { color: var(--fg); border-color: var(--muted); }
+  .pick-btn.copied { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
   table.legend { border-collapse: collapse; margin-top: 8px; font-size: 11px; color: var(--muted); }
   table.legend td { padding: 2px 12px 2px 0; }
 </style>
 </head>
 <body>
 <h1>Unfilled ocean cells — color candidates</h1>
-<p class="sub">Amber and ember unfilled cells already carry their zone tint (136 / 130). Only the ocean zone falls back to neutral gray 237. Each variant below changes that one value.</p>
+<p class="sub">Amber and ember unfilled cells already carried their zone tint (136 / 130) while the ocean zone fell back to neutral gray 237. Each variant below changes that one value.</p>
 <div id="out"></div>
 
 <table class="legend">
@@ -47,17 +63,17 @@
 </table>
 
 <script>
-const X = {
-  17: '#00005f', 18: '#000087', 19: '#0000af',
-  23: '#005f5f', 24: '#005f87', 25: '#005faf',
-  33: '#0087ff', 60: '#5f5f87', 61: '#5f5faf', 67: '#5f87af',
+const XTERM = {
+  17: '#00005f', 18: '#000087',
+  24: '#005f87', 25: '#005faf',
+  33: '#0087ff', 61: '#5f5faf', 67: '#5f87af',
   130: '#af5f00', 136: '#af8700', 202: '#ff5f00', 214: '#ffaf00',
   237: '#3a3a3a', 244: '#808080'
 };
 
 const VARIANTS = [
   { name: 'A — current', code: 237, note: 'neutral gray, no zone tint' },
-  { name: 'B — 25', code: 25, note: 'exact analog of amber 136: same one-step darkening applied to 33', rec: true },
+  { name: 'B — 25', code: 25, note: 'mirrors amber 214 → 136: brightest channel two cube levels down, mid channel one', rec: true },
   { name: 'C — 24', code: 24, note: 'darker, greener; recedes more' },
   { name: 'D — 18', code: 18, note: 'pure navy, very low luminance' },
   { name: 'E — 17', code: 17, note: 'near-black navy; barely reads as blue' },
@@ -67,6 +83,11 @@ const VARIANTS = [
 
 const FILLS = [0, 6, 25, 44, 50, 63, 88, 100];
 
+// The context count and each percent readout walk the same thresholds as the cells.
+function zoneOf(pct) {
+  return pct > 75 ? 202 : pct > 50 ? 214 : 33;
+}
+
 function bar(pct, unfilledOcean) {
   const w = 8;
   const filled = Math.round(pct * w / 100);
@@ -75,18 +96,16 @@ function bar(pct, unfilledOcean) {
     const zone = i <= 4 ? 33 : i <= 6 ? 214 : 202;
     const mark = i <= 4 ? unfilledOcean : i <= 6 ? 136 : 130;
     const on = i <= filled;
-    html += `<span style="color:${X[on ? zone : mark]}">${on ? '▰' : '▱'}</span>`;
+    html += `<span style="color:${XTERM[on ? zone : mark]}">${on ? '▰' : '▱'}</span>`;
   }
-  const pc = pct > 75 ? 202 : pct > 50 ? 214 : 33;
-  return `<span class="cell">${html}</span> <span style="color:${X[pc]}">${pct}%</span>`;
+  return `<span class="cell">${html}</span> <span style="color:${XTERM[zoneOf(pct)]}">${pct}%</span>`;
 }
 
 function line(pct, unfilledOcean) {
-  const sep = ` <span style="color:${X[244]};opacity:.7">·</span> `;
-  const ctx = pct > 75 ? 202 : pct > 50 ? 214 : 33;
+  const sep = ` <span style="color:${XTERM[244]};opacity:.7">·</span> `;
   return [
     `<span class="dim">Opus 5</span>`,
-    `<span style="color:${X[ctx]};font-weight:600">128.4k</span> <span class="dim">(12.8%)</span>`,
+    `<span style="color:${XTERM[zoneOf(pct)]};font-weight:600">128.4k</span> <span class="dim">(12.8%)</span>`,
     `<span class="dim">5h</span> ${bar(pct, unfilledOcean)} <span class="dim">↻3h</span>`,
     `<span class="dim">wk</span> ${bar(Math.min(100, Math.round(pct * 0.7)), unfilledOcean)} <span class="dim">↻4d</span>`,
     `<span class="dim">fb</span> ${bar(Math.min(100, Math.round(pct * 0.4)), unfilledOcean)}`
@@ -96,14 +115,38 @@ function line(pct, unfilledOcean) {
 document.getElementById('out').innerHTML = VARIANTS.map(v => `
   <div class="variant">
     <div class="vhead">
-      <span class="swatch" style="background:${X[v.code]}"></span>
+      <span class="swatch" style="background:${XTERM[v.code]}"></span>
       <span class="vname">${v.name}</span>
-      <span class="vmeta">${X[v.code]} · ${v.note}</span>
+      <span class="vmeta">${XTERM[v.code]} · ${v.note}</span>
       ${v.rec ? '<span class="rec">recommended</span>' : ''}
+      <button type="button" class="pick-btn" data-pick="unfilled ocean ${v.name} — xterm ${v.code} ${XTERM[v.code]}">Pick this</button>
     </div>
     <div class="rows">${FILLS.map(f => `<div class="row">${line(f, v.code)}</div>`).join('')}</div>
   </div>
 `).join('');
+
+document.querySelectorAll(".pick-btn").forEach((btn) => {
+  btn.addEventListener("click", async () => {
+    const text = `pick: ${btn.dataset.pick}`;
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (e) {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
+    const original = btn.textContent;
+    btn.textContent = "✓ Copied";
+    btn.classList.add("copied");
+    setTimeout(() => {
+      btn.textContent = original;
+      btn.classList.remove("copied");
+    }, 1200);
+  });
+});
 </script>
 </body>
 </html>

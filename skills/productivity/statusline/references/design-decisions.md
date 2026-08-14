@@ -16,7 +16,7 @@ Staged fill colors (ocean 33 → amber 214 → ember 202) beat every 2-color zon
 
 ## Unfilled ocean cells: dim ocean 25 `#005faf`
 
-Ocean's unfilled track was neutral 237 while amber and ember already carried a tint, so the empty left half read as absent rather than as a zone. Dim ocean 25 is the exact analogue of the warning markers: 214 → 136 and 202 → 130 each darken one xterm step per channel, and the same step on 33 `#0087ff` lands on 25. Rejected (see `empty-blue.html`): 24 `#005f87` too dark and green; 18 and 17 read as near-black; 61 and 67 sit close enough to the fill color to be mistaken for filled cells.
+Ocean's unfilled track was neutral 237 while amber and ember already carried a tint, so the empty left half read as absent rather than as a zone. Dim ocean 25 dims 33 the way amber dims: in cube coordinates (`16 + 36r + 6g + b`, levels `00/5f/87/af/d7/ff`), 214 `(5,3,0)` → 136 `(3,2,0)` drops the brightest channel two levels and the mid channel one, and the same move on 33 `(0,2,5)` lands on 25 `(0,1,3)`. Ember 202 `(5,1,0)` → 130 `(3,1,0)` drops the brightest two and leaves the mid alone. Rejected (see `empty-blue.html`): 24 `#005f87` too dark and green; 18 and 17 read as near-black; 61 and 67 sit close enough to the fill color to be mistaken for filled cells.
 
 ## Proportions: 4/2/2 on 8 cells
 

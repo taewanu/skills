@@ -55,6 +55,10 @@ Review-round hardening: jq-required guard; `LC_ALL=C`; `stat -f`/`stat -c` fallb
 
 Absent from statusline stdin. Comes from the undocumented `GET https://api.anthropic.com/api/oauth/usage` (Bearer OAuth token from macOS Keychain `Claude Code-credentials`, header `anthropic-beta: oauth-2025-04-20`). The model bucket arrives in `limits[]` as `kind: "weekly_scoped"` with `scope.model.display_name`, not a top-level key. The endpoint 429s aggressively at 30–60s polling, hence the 300s file cache (`~/.claude/usage-scoped.json`) with background refresh.
 
+## Freshness
+
+Event-driven rendering plus the stdin snapshot lagged the dashboard. Fixed twice over: `"refreshInterval": 30` re-renders during idle (local only, roughly 0.3% of one core per session), and the 5h/wk gauges read cache-first from the endpoint response, falling back to stdin. The network stays TTL-gated at one request per 300s, shared across sessions via the in-flight guard.
+
 ## Percent parity
 
 Server sends integers; display matches the /usage panel exactly. Residual 1%p differences are snapshot timing, not rounding.

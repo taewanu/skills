@@ -36,14 +36,15 @@ Unfilled amber/ember cells stay visible as dim markers so the three-part divisio
 1. Copy `templates/statusline-command.sh` to `~/.claude/statusline-command.sh`.
 2. In `~/.claude/settings.json`:
    ```json
-   "statusLine": { "type": "command", "command": "sh ~/.claude/statusline-command.sh" }
+   "statusLine": { "type": "command", "command": "sh ~/.claude/statusline-command.sh", "refreshInterval": 30 }
    ```
+   `refreshInterval` re-renders every 30 seconds during idle, so countdowns tick and cache updates surface without waiting for a prompt.
 3. Requires `jq` and `curl`. The fb gauge needs a Claude subscription (OAuth token in the macOS Keychain item `Claude Code-credentials`, or `~/.claude/.credentials.json`); without it the gauge simply doesn't render.
 
 ## Data sources
 
-- **stdin JSON** (piped by Claude Code on every refresh): `context_window.current_usage.*` for the token count, `rate_limits.five_hour` / `rate_limits.seven_day` (`used_percentage`, `resets_at` epoch) for the 5h/wk gauges. No per-model field exists here.
-- **OAuth usage endpoint** (undocumented, same one the /usage panel calls): `GET https://api.anthropic.com/api/oauth/usage` with `Authorization: Bearer <accessToken>` and `anthropic-beta: oauth-2025-04-20`. Per-model weekly arrives in the `limits[]` array as `kind: "weekly_scoped"` with `scope.model.display_name` naming the model, not as a top-level key. The endpoint rate-limits aggressively (30–60s polling earns persistent 429s), so the script caches the response at `~/.claude/usage-scoped.json` with a 300s TTL and refreshes in a background subshell; the statusline never waits on the network.
+- **stdin JSON** (piped by Claude Code on every refresh): `context_window.current_usage.*` for the token count; `rate_limits.five_hour` / `rate_limits.seven_day` (`used_percentage`, `resets_at` epoch) as the 5h/wk fallback when the cache is absent. No per-model field exists here.
+- **OAuth usage endpoint** (undocumented, same one the /usage panel calls): `GET https://api.anthropic.com/api/oauth/usage` with `Authorization: Bearer <accessToken>` and `anthropic-beta: oauth-2025-04-20`. All three gauges prefer this cached response (at most 300s old, the same data the /usage panel shows): 5h/wk from `limits[]` kinds `session` and `weekly_all`, per-model from `kind: "weekly_scoped"` with `scope.model.display_name` naming the model, not a top-level key. The endpoint rate-limits aggressively (30–60s polling earns persistent 429s), so the script caches the response at `~/.claude/usage-scoped.json` with a 300s TTL and refreshes in a background subshell; the statusline never waits on the network.
 
 All displayed percentages are the server's own integers, so the numbers match the /usage panel exactly; any 1%p disagreement is snapshot timing (stdin updates on the last API response, the panel queries live), not rounding.
 

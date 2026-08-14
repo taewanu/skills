@@ -87,10 +87,30 @@ week=$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty')
 five_r=$(echo "$input" | jq -r '.rate_limits.five_hour.resets_at // empty')
 week_r=$(echo "$input" | jq -r '.rate_limits.seven_day.resets_at // empty')
 
+# resets_at in the cache is UTC ISO8601; parse via BSD date, then GNU date
+iso2epoch() {
+  date -j -u -f "%Y-%m-%dT%H:%M:%S" "$(printf '%.19s' "$1")" +%s 2>/dev/null \
+    || date -u -d "$1" +%s 2>/dev/null
+}
+
+# The cache (same endpoint as the /usage panel, at most 300s old) outranks the stdin
+# snapshot, which only refreshes when a new API response arrives.
 # fb resets together with wk (both weekly), so it carries no countdown of its own.
 fable=""
 if [ -f "$CACHE" ]; then
+  five_c=$(jq -r '[.limits[]? | select(.kind == "session")][0].percent // empty' "$CACHE" 2>/dev/null)
+  week_c=$(jq -r '[.limits[]? | select(.kind == "weekly_all")][0].percent // empty' "$CACHE" 2>/dev/null)
   fable=$(jq -r '[.limits[]? | select(.kind == "weekly_scoped" and (.scope.model.display_name // "" | test("Fable")))][0].percent // empty' "$CACHE" 2>/dev/null)
+  if [ -n "$five_c" ]; then
+    five="$five_c"
+    five_r_iso=$(jq -r '[.limits[]? | select(.kind == "session")][0].resets_at // empty' "$CACHE" 2>/dev/null)
+    [ -n "$five_r_iso" ] && five_r=$(iso2epoch "$five_r_iso")
+  fi
+  if [ -n "$week_c" ]; then
+    week="$week_c"
+    week_r_iso=$(jq -r '[.limits[]? | select(.kind == "weekly_all")][0].resets_at // empty' "$CACHE" 2>/dev/null)
+    [ -n "$week_r_iso" ] && week_r=$(iso2epoch "$week_r_iso")
+  fi
 fi
 
 if [ -n "$five" ];  then printf "$sep"; bar "$five"  "5h" "$five_r" "$now"; fi

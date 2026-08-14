@@ -10,6 +10,7 @@ now=$(date +%s)
 # endpoint: cached 300s and refreshed in the background because the endpoint 429s
 # aggressively and the statusline must never wait on the network.
 CACHE="$HOME/.claude/usage-scoped.json"
+# The fallback version is a harmless spoof: the endpoint only rate-limits harder without a client-like UA.
 cc_ver=$(echo "$input" | jq -r '.version // "2.1.229"')
 cache_mtime=$(stat -f %m "$CACHE" 2>/dev/null || stat -c %Y "$CACHE" 2>/dev/null || echo 0)
 cache_age=$(( now - cache_mtime ))

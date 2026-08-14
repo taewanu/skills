@@ -1,6 +1,6 @@
 ---
 name: visual-code-review
-description: Render a diff, PR, or slice of code as a single self-contained HTML page: the real diff with inline margin annotations, a flow diagram, key snippets, risks, open questions. Click-to-copy notes round-trip decisions to chat. Two modes: **review** (a change/diff/PR) and **explain** (existing code or a subsystem). Use whenever the user wants a change or codebase made legible visually ("이 diff 설명해줘", "PR 리뷰 보기 좋게 만들어줘", "이 코드 흐름 그림으로", "아키텍처 html로 설명", "walk me through this PR", "explain this diff/PR as html", "visualize this change", "help me understand this module") or is about to dump a long diff as plain markdown. NOT a graded correctness audit: that's `/code-review`; this can lay those findings over the diff.
+description: 'Render a diff, PR, or slice of code as a single self-contained HTML page: the real diff with inline margin annotations, a flow diagram, key snippets, risks, open questions. Click-to-copy notes round-trip decisions to chat. Two modes: **review** (a change/diff/PR) and **explain** (existing code or a subsystem). Use whenever the user wants a change or codebase made legible visually ("이 diff 설명해줘", "PR 리뷰 보기 좋게 만들어줘", "이 코드 흐름 그림으로", "아키텍처 html로 설명", "walk me through this PR", "explain this diff/PR as html", "visualize this change", "help me understand this module") or is about to dump a long diff as plain markdown. NOT a graded correctness audit: that''s `/code-review`; this can lay those findings over the diff.'
 ---
 
 # Visual Code Review

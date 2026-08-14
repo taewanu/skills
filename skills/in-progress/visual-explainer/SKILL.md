@@ -1,6 +1,6 @@
 ---
 name: visual-explainer
-description: Turn a tangled technical thing (a gnarly bug and the decision it forces, a non-obvious system behavior, an architectural "why") into ONE self-contained, conclusion-first HTML page that explains it, can be handed off, and copies itself back out as Markdown. Use when the user wants something *explained and handed off*: "이거 왜 이런지 설명자료로 만들어줘", "남들도 이해하게 정리해줘", "이슈 설명 페이지", "결정 배경 정리", "explain this so the team gets it", "write up why this happens", "make a shareable explainer", "document this decision/tradeoff". Sibling of `visual-code-lecture` / `visual-code-review`, which annotate *real code*; reach for THIS when the subject is a situation, a decision, or a phenomenon. Not `visual-ui-compare` (pick by eye), not `/code-review` (audit).
+description: 'Turn a tangled technical thing (a gnarly bug and the decision it forces, a non-obvious system behavior, an architectural "why") into ONE self-contained, conclusion-first HTML page that explains it, can be handed off, and copies itself back out as Markdown. Use when the user wants something *explained and handed off*: "이거 왜 이런지 설명자료로 만들어줘", "남들도 이해하게 정리해줘", "이슈 설명 페이지", "결정 배경 정리", "explain this so the team gets it", "write up why this happens", "make a shareable explainer", "document this decision/tradeoff". Sibling of `visual-code-lecture` / `visual-code-review`, which annotate *real code*; reach for THIS when the subject is a situation, a decision, or a phenomenon. Not `visual-ui-compare` (pick by eye), not `/code-review` (audit).'
 ---
 
 # Visual Explainer

@@ -1,6 +1,6 @@
 ---
 name: statusline
-description: Install, update, or customize the zoned-gauge Claude Code statusline, one line showing the model name and context tokens plus 5-hour, weekly, and per-model usage limits as instrument-style bars with reset countdowns. Use when the user wants usage limits or token info in the Claude Code statusline, asks to tweak its bars, colors, zones, or divider, or wants per-model weekly usage that the /usage panel shows but statusline stdin does not provide. Triggers: "statusline 설정", "상태줄에 사용량", "게이지 바꿔줘", "Fable 사용량 보여줘", "set up my statusline", "usage bars in statusline", "show weekly limit in status bar", "/statusline".
+description: 'Install, update, or customize the zoned-gauge Claude Code statusline, one line showing the model name and context tokens plus 5-hour, weekly, and per-model usage limits as instrument-style bars with reset countdowns. Use when the user wants usage limits or token info in the Claude Code statusline, asks to tweak its bars, colors, zones, or divider, or wants per-model weekly usage that the /usage panel shows but statusline stdin does not provide. Triggers: "statusline 설정", "상태줄에 사용량", "게이지 바꿔줘", "Fable 사용량 보여줘", "set up my statusline", "usage bars in statusline", "show weekly limit in status bar", "/statusline".'
 ---
 
 # Statusline
@@ -23,13 +23,13 @@ Fable 5  ·  186.0k (19.0%)  ·  5h ▱▱▱▱▱▱▱▱ 5% ↻1h  ·  wk �
 
 | Zone | Cells | Range | Fill color | Unfilled marker |
 |---|---|---|---|---|
-| ocean | 1–4 | ≤50% | 33 `#0087ff` | 237 (plain track) |
+| ocean | 1–4 | ≤50% | 33 `#0087ff` | 25 (dim ocean) |
 | amber | 5–6 | 50–75% | 214 `#ffaf00` | 136 (dim amber) |
 | ember | 7–8 | >75% | 202 `#ff5f00` | 130 (dim ember) |
 
-Unfilled amber/ember cells stay visible as dim markers so the three-part division reads at any fill level (fuel-gauge red-zone idea). The percent text is thresholded on the value itself (amber above 50, ember above 75) like the context count, so at 51% the number reads amber before an amber cell lights. Segments divide with a dim `·` in two-space gaps.
+Every unfilled cell keeps its zone color with the brightest channel dropped two cube levels, so the three-part division reads at any fill level (fuel-gauge red-zone idea). The percent text is thresholded on the value itself (amber above 50, ember above 75) like the context count, so at 51% the number reads amber before an amber cell lights. Segments divide with a dim `·` in two-space gaps.
 
-`references/red-zone-palette.html` and `references/zone-proportions.html` are the visual-ui-compare pages these decisions came from; `references/design-decisions.md` records the rationale.
+`references/red-zone-palette.html`, `references/zone-proportions.html`, and `references/empty-blue.html` are the visual-ui-compare pages these decisions came from; `references/design-decisions.md` records the rationale.
 
 ## Install
 

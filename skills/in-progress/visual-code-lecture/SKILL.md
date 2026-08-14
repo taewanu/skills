@@ -1,6 +1,6 @@
 ---
 name: visual-code-lecture
-description: Walk through code one line at a time as a guided, hand-drawn lecture: one self-contained HTML page you SCROLL, code pinned left and notes scrolling right, one note and its line(s) lit at a time, like a 족집게 강의. Use whenever the user wants code *taught* sequentially rather than scanned ("코드 한 줄씩 설명해줘", "족집게 강의처럼", "이 함수 따라가면서 설명", "이 로직 흐름 짚어줘", "라인별로 설명", "walk me through this line by line", "teach me this code", "explain this step by step", "guided tour of this function/file", "narrate this logic"). Sibling of `visual-code-review`, the static all-annotations-at-once page; reach for THIS when the goal is a paced, one-thing-at-a-time walkthrough. NOT a correctness audit (`/code-review`).
+description: 'Walk through code one line at a time as a guided, hand-drawn lecture: one self-contained HTML page you SCROLL, code pinned left and notes scrolling right, one note and its line(s) lit at a time, like a 족집게 강의. Use whenever the user wants code *taught* sequentially rather than scanned ("코드 한 줄씩 설명해줘", "족집게 강의처럼", "이 함수 따라가면서 설명", "이 로직 흐름 짚어줘", "라인별로 설명", "walk me through this line by line", "teach me this code", "explain this step by step", "guided tour of this function/file", "narrate this logic"). Sibling of `visual-code-review`, the static all-annotations-at-once page; reach for THIS when the goal is a paced, one-thing-at-a-time walkthrough. NOT a correctness audit (`/code-review`).'
 ---
 
 # Visual Code Lecture

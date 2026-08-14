@@ -1,6 +1,6 @@
 ---
 name: step-back-as-user
-description: Step out of the current solution frame and re-enter from the user's side. Two modes, (1) **friction**: become the end user and walk a specific moment, noticing where they stall; (2) **reference**: anchored to a specific moment, surface how 2–3 well-known products solve it and the tradeoff each took. Use when the user asks to "think from the user's perspective", wants a fresh angle on a flow or screen, is reviewing for friction, is stuck on how to handle a UX moment ("how do others do this"), or whenever the current line of thinking has gotten too internal and risks losing sight of who it's for.
+description: 'Step out of the current solution frame and re-enter from the user''s side. Two modes, (1) **friction**: become the end user and walk a specific moment, noticing where they stall; (2) **reference**: anchored to a specific moment, surface how 2–3 well-known products solve it and the tradeoff each took. Use when the user asks to "think from the user''s perspective", wants a fresh angle on a flow or screen, is reviewing for friction, is stuck on how to handle a UX moment ("how do others do this"), or whenever the current line of thinking has gotten too internal and risks losing sight of who it''s for.'
 ---
 
 # Step Back As User

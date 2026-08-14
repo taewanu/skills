@@ -1,6 +1,6 @@
 ---
 name: visual-ui-compare
-description: Generate a single self-contained HTML page for making a visual decision by eye, open it in the browser, and let the user pick: a grid of variants side-by-side (color, size, spacing, shadow, radius, border, badge or card styles), or a live preview with sliders when the choice is motion or a continuous range (animation, easing, duration, transitions). Use whenever the user wants to compare or tune a visual choice ("비교해서 보여줘", "어떤 게 나아?", "A/B 보고 싶어", "html로 만들어 봐", "직접 보고 결정할게", "easing 비교", "이 애니메이션 느낌 좀 보자", "transition 속도 조절", "compare visually", "show me side by side", "which one looks better?", "tune this animation", "slider for this") or any time you're about to use AskUserQuestion with 2+ options for a visual property.
+description: 'Generate a single self-contained HTML page for making a visual decision by eye, open it in the browser, and let the user pick: a grid of variants side-by-side (color, size, spacing, shadow, radius, border, badge or card styles), or a live preview with sliders when the choice is motion or a continuous range (animation, easing, duration, transitions). Use whenever the user wants to compare or tune a visual choice ("비교해서 보여줘", "어떤 게 나아?", "A/B 보고 싶어", "html로 만들어 봐", "직접 보고 결정할게", "easing 비교", "이 애니메이션 느낌 좀 보자", "transition 속도 조절", "compare visually", "show me side by side", "which one looks better?", "tune this animation", "slider for this") or any time you''re about to use AskUserQuestion with 2+ options for a visual property.'
 ---
 
 # Visual UI Compare

@@ -25,5 +25,6 @@ Skills for code and product work.
 
 General workflow tools, not code-specific.
 
+* **[statusline](skills/productivity/statusline/SKILL.md)**: A zoned-gauge Claude Code statusline: model name, context tokens, and 5-hour and weekly usage as instrument-style bars with reset countdowns, including the per-model weekly limit that statusline stdin does not provide.
 * **[time-tracking](skills/productivity/time-tracking/SKILL.md)**: Track work sessions inside Claude Code. Auto-captured start/end time and project, one prompt for category split and shipped notes, appended as plain markdown for retrospective analysis or client invoicing.
 * **[visual-ui-compare](skills/productivity/visual-ui-compare/SKILL.md)**: Turn a visual decision into a self-contained HTML page and open it in the browser: a side-by-side grid of variants with identical content, or a live preview with sliders when the choice is motion or a continuous range. Decide by eye, then patch the pick back into the code. Reach for it instead of an AskUserQuestion with 2+ visual options.

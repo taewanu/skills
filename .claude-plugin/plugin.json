@@ -17,6 +17,7 @@
   ],
   "skills": [
     "./skills/engineering/step-back-as-user",
+    "./skills/productivity/statusline",
     "./skills/productivity/time-tracking",
     "./skills/productivity/visual-ui-compare"
   ]

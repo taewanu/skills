@@ -1,6 +1,6 @@
 ---
 name: statusline
-description: Install, update, or customize the zoned-gauge Claude Code statusline, one line showing the model name and context tokens plus 5-hour, weekly, and per-model usage limits as instrument-style bars with reset countdowns. Use when the user wants usage limits or token info in the Claude Code statusline, asks to tweak its bars, colors, zones, or divider, or wants per-model weekly usage that the /usage panel shows but statusline stdin does not provide. Triggers: "statusline 설정", "상태줄에 사용량", "게이지 바꿔줘", "Fable 사용량 보여줘", "set up my statusline", "usage bars in statusline", "show weekly limit in status bar", "/statusline".
+description: 'Install, update, or customize the zoned-gauge Claude Code statusline, one line showing the model name and context tokens plus 5-hour, weekly, and per-model usage limits as instrument-style bars with reset countdowns. Use when the user wants usage limits or token info in the Claude Code statusline, asks to tweak its bars, colors, zones, or divider, or wants per-model weekly usage that the /usage panel shows but statusline stdin does not provide. Triggers: "statusline 설정", "상태줄에 사용량", "게이지 바꿔줘", "Fable 사용량 보여줘", "set up my statusline", "usage bars in statusline", "show weekly limit in status bar", "/statusline".'
 ---
 
 # Statusline

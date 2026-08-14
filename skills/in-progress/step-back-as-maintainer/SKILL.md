@@ -1,6 +1,6 @@
 ---
 name: step-back-as-maintainer
-description: Step out of the current frame and re-enter cold. Two modes, (1) **code**: drop the authoring frame and walk the diff/file as someone touching it months later; (2) **session**: drop the chain of reasoning in this chat and walk back into the problem as someone who just joined. Surfaces understanding cost, hidden coupling, and unstated assumptions without rewriting anything. Use when reviewing your own diff before sending it out, when finishing a feature, when something feels "clever" and you want to check it'll still be legible later, when a discussion has run long enough that you're anchored on assumptions you stopped questioning, or whenever current thinking is too tied to "I know what I just wrote/said."
+description: 'Step out of the current frame and re-enter cold. Two modes, (1) **code**: drop the authoring frame and walk the diff/file as someone touching it months later; (2) **session**: drop the chain of reasoning in this chat and walk back into the problem as someone who just joined. Surfaces understanding cost, hidden coupling, and unstated assumptions without rewriting anything. Use when reviewing your own diff before sending it out, when finishing a feature, when something feels "clever" and you want to check it''ll still be legible later, when a discussion has run long enough that you''re anchored on assumptions you stopped questioning, or whenever current thinking is too tied to "I know what I just wrote/said."'
 ---
 
 # Step Back As Maintainer

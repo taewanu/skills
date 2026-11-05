@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<!--
+  rebuild-mental-model walkthrough page. One self-contained file, rendered entirely from the JSON
+  spec in <script id="spec">. Replace the spec; copy <style> and the second <script> verbatim.
+
+  What the page does (mechanics, solved):
+    - Two panels drawn in ONE grammar: the user's old model and the rebuilt model.
+    - Step-through: the case line being processed and the elements it touches light up in the
+      accent; everything else dims. Elements enter and exit by step; an exited element stays on
+      screen, faded and dashed, so the reader sees what stayed and what changed.
+    - Commit before reveal: a step with "ask" locks Next until the reader types a prediction
+      (or presses "not sure", which also counts as a commit).
+    - Distractors: candidate pictures in the same grammar. They unlock at the last step (so they
+      can't give away a prediction), and the verdicts stay hidden until the reader picks one.
+    - "Copy for chat" exports predictions, the pick, and the reasons as markdown.
+
+  Spec shape (all text renders as plain text; `backticks` become inline code):
+    title, topic          strings
+    caseStyle             "code" (monospace lines) | "prose"
+    case                  [string]: the scenario, one line per step target
+    kinds                 { kindName: { shape: rect|pill|circle|diamond|tag, label } }
+    wires                 { wireName: { style: solid|dashed|dotted, label } }
+    panels.old / .new     { label, nodes: [Node], edges: [Edge] }
+      Node                { id, kind, text, at: [col, row], enter?: step, exit?: step }
+      Edge                { id, from, to, wire, text?, enter?: step, exit?: step }
+    steps                 [{ line?: index into case, say, hot?: [ids], ask? }]
+    distractorAsk         string: the question the distractors answer (a one-detail variant)
+    distractors           [{ id, label, right: bool, why, nodes, edges }]
+  Ids are unique across both panels. enter defaults to 0; exit means "faded from this step on".
+
+  Limits (the grammar draws relations, not quantities):
+    - 5 shapes and 3 line styles, so at most 5 kinds and 3 wires per page.
+    - Node labels up to about 12 characters; longer ones overflow their shape.
+    - Numbers, curves, and distributions go in `case` lines and step text, not in the diagram.
+    - Distractor cards are narrow: keep each distractor within 2 columns.
+    - Write any "</" inside the JSON as "<\/" so the script tag stays open.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Rebuild: mental model</title>
+    <script>
+      try { document.documentElement.dataset.theme = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"; }
+      catch (e) { document.documentElement.dataset.theme = "dark"; }
+    </script>
+    <style>
+      :root, [data-theme="dark"] {
+        --bg: #111214; --bg-elev: #1a1b1e; --fg: #e8e6e3; --fg-muted: #9a9894; --border: #34353a;
+        --ink: #d9d6d0; --accent: #f08a3c; --accent-bg: rgba(240,138,60,0.14); --ok: #4caf7a; --bad: #e06666;
+      }
+      [data-theme="light"] {
+        --bg: #faf9f6; --bg-elev: #ffffff; --fg: #1f1f1f; --fg-muted: #6b6a66; --border: #dcdad5;
+        --ink: #2a2a2a; --accent: #d9661a; --accent-bg: rgba(217,102,26,0.10); --ok: #2e8b57; --bad: #c0392b;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { background: var(--bg); color: var(--fg); font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+      code, .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.92em; }
+      code { background: var(--accent-bg); padding: 0 4px; border-radius: 4px; }
+      button { all: unset; cursor: pointer; }
+      textarea { width: 100%; min-height: 64px; resize: vertical; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--fg); font: inherit; }
+      textarea:focus { outline: none; border-color: var(--accent); }
+
+      .topbar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 12px; padding: 12px 22px; background: var(--bg); border-bottom: 1px solid var(--border); }
+      .topbar h1 { font-size: 17px; font-weight: 600; }
+      .topbar .topic { font-size: 12px; color: var(--fg-muted); padding: 2px 8px; border: 1px solid var(--border); border-radius: 6px; }
+      .topbar .push { margin-left: auto; }
+      .pill { padding: 5px 12px; border-radius: 9999px; border: 1px solid var(--border); background: var(--bg-elev); color: var(--fg-muted); font-size: 12.5px; }
+      .pill:hover { color: var(--fg); border-color: var(--fg-muted); }
+      .pill.primary { background: var(--accent); border-color: var(--accent); color: #111; font-weight: 600; }
+      .pill[aria-disabled="true"] { opacity: 0.35; cursor: default; }
+      .pill.flash { border-color: var(--ok); color: var(--ok); }
+
+      main { max-width: 1180px; margin: 0 auto; padding: 22px 22px 120px; display: grid; gap: 28px; }
+      .walk { display: grid; grid-template-columns: 320px 1fr; gap: 24px; align-items: start; }
+      .side { position: sticky; top: 70px; display: grid; gap: 14px; }
+      .case { border: 1px solid var(--border); border-radius: 10px; background: var(--bg-elev); padding: 10px 0; }
+      .case .ln { padding: 2px 14px; border-left: 3px solid transparent; transition: background 200ms, border-color 200ms, opacity 200ms; }
+      .case.code .ln { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px; white-space: pre-wrap; }
+      .case .ln.now { border-left-color: var(--accent); background: var(--accent-bg); }
+      .case .ln.later { opacity: 0.4; }
+      .card { border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 10px; background: var(--bg-elev); padding: 12px 14px; display: grid; gap: 10px; }
+      .card .num { font: 600 11px ui-monospace, monospace; color: var(--accent); }
+      .card .ask { font-weight: 600; }
+      .row { display: flex; gap: 8px; }
+
+      .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+      .panel { border: 1px solid var(--border); border-radius: 10px; background: var(--bg-elev); padding: 10px 12px; min-width: 0; }
+      .panel h2 { font-size: 12.5px; font-weight: 600; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
+      .panel svg { width: 100%; height: auto; display: block; }
+      .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--fg-muted); grid-column: 1 / -1; }
+      .legend span { display: inline-flex; align-items: center; gap: 6px; }
+
+      svg .el { transition: opacity 260ms ease; }
+      svg .shape { fill: var(--bg); stroke: var(--ink); stroke-width: 1.5; }
+      svg .label { fill: var(--ink); font: 15px ui-sans-serif, system-ui, sans-serif; text-anchor: middle; dominant-baseline: central; }
+      svg .wire { stroke: var(--ink); stroke-width: 1.5; fill: none; }
+      svg .tip { fill: var(--ink); }
+      svg .wire-label { fill: var(--fg-muted); font: 12.5px ui-sans-serif, system-ui, sans-serif; text-anchor: middle; }
+      svg .el.hot .shape, svg .el.hot .wire { stroke: var(--accent); stroke-width: 2.5; }
+      svg .el.hot .tip, svg .el.hot .label { fill: var(--accent); }
+      svg .el.dim { opacity: 0.28; }
+      svg .el.gone { opacity: 0.22; }
+      svg .el.gone .shape, svg .el.gone .wire { stroke-dasharray: 4 4; }
+      svg .el.hidden { opacity: 0; pointer-events: none; }
+
+      .distractors.locked .dgrid, .distractors.locked #reveal { display: none; }
+      .distractors h2 { font-size: 16px; margin-bottom: 4px; }
+      .distractors .hint { color: var(--fg-muted); font-size: 13.5px; margin-bottom: 12px; }
+      .dgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+      .dcard { border: 1px solid var(--border); border-radius: 10px; background: var(--bg-elev); padding: 10px 12px; display: grid; gap: 8px; }
+      .dcard.picked { border-color: var(--accent); }
+      .dcard .head { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+      .dcard .verdict { display: none; font-size: 13.5px; padding: 6px 9px; border-radius: 6px; }
+      .revealed .dcard .verdict { display: block; }
+      .dcard .verdict.right { background: color-mix(in srgb, var(--ok) 16%, transparent); color: var(--ok); }
+      .dcard .verdict.wrong { background: color-mix(in srgb, var(--bad) 14%, transparent); color: var(--bad); }
+
+      .controlbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; display: flex; align-items: center; gap: 10px; padding: 12px 22px; background: var(--bg); border-top: 1px solid var(--border); }
+      .controlbar .count { font: 12.5px ui-monospace, monospace; color: var(--fg-muted); }
+      .controlbar .push { margin-left: auto; }
+      .dots { display: flex; gap: 6px; }
+      .dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--border); }
+      .dot.done { background: var(--fg-muted); border-color: var(--fg-muted); opacity: 0.5; }
+      .dot.current { background: var(--accent); border-color: var(--accent); }
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <h1 id="title"></h1>
+      <span class="topic" id="topic"></span>
+      <span class="push"></span>
+      <button class="pill" id="theme-toggle" title="Toggle light / dark">☀</button>
+    </div>
+
+    <main>
+      <section class="walk">
+        <div class="side">
+          <div class="case" id="case"></div>
+          <div class="card" id="card"></div>
+        </div>
+        <div class="panels">
+          <div class="panel"><h2 id="old-label"></h2><svg id="old" role="img"></svg></div>
+          <div class="panel"><h2 id="new-label"></h2><svg id="new" role="img"></svg></div>
+          <div class="legend" id="legend"></div>
+        </div>
+      </section>
+
+      <section class="distractors locked" id="distractors">
+        <h2 id="dask">Which picture is right?</h2>
+        <p class="hint" id="dhint"></p>
+        <div class="dgrid" id="dgrid"></div>
+        <div class="row" style="margin-top:12px"><button class="pill" id="reveal" aria-disabled="true">Reveal verdicts</button></div>
+      </section>
+    </main>
+
+    <div class="controlbar">
+      <div class="dots" id="dots"></div>
+      <span class="count" id="count"></span>
+      <span class="push"></span>
+      <button class="pill" id="prev">◀ Prev</button>
+      <button class="pill primary" id="next">Next ▶</button>
+      <button class="pill" id="export" title="Copy your predictions and picks as markdown">⧉ Copy for chat</button>
+    </div>
+
+    <!-- SPEC: replace this whole JSON. The sample rebuilds "b is an alias of a" into "wires end at values". -->
+    <script type="application/json" id="spec">
+{
+  "title": "Variables are wires, not aliases",
+  "topic": "JavaScript assignment",
+  "caseStyle": "code",
+  "case": ["let a = 10;", "let b = a;", "a = 0;"],
+  "kinds": {
+    "name": { "shape": "tag", "label": "variable" },
+    "value": { "shape": "pill", "label": "value" }
+  },
+  "wires": {
+    "points": { "style": "solid", "label": "points to" }
+  },
+  "panels": {
+    "old": {
+      "label": "Your model: b follows a",
+      "nodes": [
+        { "id": "oa", "kind": "name", "text": "a", "at": [1, 0] },
+        { "id": "ob", "kind": "name", "text": "b", "at": [0, 0], "enter": 1 },
+        { "id": "o10", "kind": "value", "text": "10", "at": [2, 0], "exit": 2 },
+        { "id": "o0", "kind": "value", "text": "0", "at": [2, 1], "enter": 2 }
+      ],
+      "edges": [
+        { "id": "oe1", "from": "oa", "to": "o10", "wire": "points", "exit": 2 },
+        { "id": "oe2", "from": "ob", "to": "oa", "wire": "points", "enter": 1 },
+        { "id": "oe3", "from": "oa", "to": "o0", "wire": "points", "enter": 2 }
+      ]
+    },
+    "new": {
+      "label": "Rebuilt model: wires end at values",
+      "nodes": [
+        { "id": "na", "kind": "name", "text": "a", "at": [0, 0] },
+        { "id": "nb", "kind": "name", "text": "b", "at": [0, 1], "enter": 1 },
+        { "id": "n10", "kind": "value", "text": "10", "at": [2, 1] },
+        { "id": "n0", "kind": "value", "text": "0", "at": [2, 0], "enter": 2 }
+      ],
+      "edges": [
+        { "id": "ne1", "from": "na", "to": "n10", "wire": "points", "exit": 2 },
+        { "id": "ne2", "from": "nb", "to": "n10", "wire": "points", "enter": 1 },
+        { "id": "ne3", "from": "na", "to": "n0", "wire": "points", "enter": 2 }
+      ]
+    }
+  },
+  "steps": [
+    { "line": 0, "say": "Declare `a` and point its wire at the value `10`. Both models agree here.", "hot": ["na", "ne1", "n10", "oa", "oe1", "o10"] },
+    { "line": 1, "say": "The models split here. Old: `b` hooks onto `a`. Rebuilt: `= a` asks for `a`'s value, and `b`'s wire goes straight to that same `10`.", "hot": ["nb", "ne2", "n10", "ob", "oe2", "oa"], "ask": "Line 3 sets `a = 0`. What is `b` afterwards, in each model?" },
+    { "line": 2, "say": "Only `a`'s wire moves. The old model drags `b` along to `0`; in the rebuilt model `b` still points at `10`, and running the code prints `10`.", "hot": ["na", "ne3", "n0", "nb", "ne2", "n10", "ob", "oe2", "oa", "oe3", "o0"] }
+  ],
+  "distractorAsk": "Swap line 3 for `b = 5;`. Which picture shows the result?",
+  "distractors": [
+    { "id": "A", "label": "a follows b to 5", "right": false, "why": "The alias model again: it treats `b` as a second name for `a`. Reassigning `b` moves only `b`'s wire.",
+      "nodes": [ { "id": "da", "kind": "name", "text": "a", "at": [0, 0] }, { "id": "db", "kind": "name", "text": "b", "at": [0, 1] }, { "id": "d5", "kind": "value", "text": "5", "at": [1, 0] } ],
+      "edges": [ { "id": "dae", "from": "da", "to": "d5", "wire": "points" }, { "id": "dbe", "from": "db", "to": "da", "wire": "points" } ] },
+    { "id": "B", "label": "a at 10, b at 5", "right": true, "why": "Each assignment moves one wire. `a` still points at `10`.",
+      "nodes": [ { "id": "ea", "kind": "name", "text": "a", "at": [0, 0] }, { "id": "eb", "kind": "name", "text": "b", "at": [0, 1] }, { "id": "e10", "kind": "value", "text": "10", "at": [1, 0] }, { "id": "e5", "kind": "value", "text": "5", "at": [1, 1] } ],
+      "edges": [ { "id": "eae", "from": "ea", "to": "e10", "wire": "points" }, { "id": "ebe", "from": "eb", "to": "e5", "wire": "points" } ] },
+    { "id": "C", "label": "both at 5", "right": false, "why": "Nothing told `a`'s wire to move. Two names sharing a value don't share a wire.",
+      "nodes": [ { "id": "fa", "kind": "name", "text": "a", "at": [0, 0] }, { "id": "fb", "kind": "name", "text": "b", "at": [0, 1] }, { "id": "f5", "kind": "value", "text": "5", "at": [1, 0] } ],
+      "edges": [ { "id": "fae", "from": "fa", "to": "f5", "wire": "points" }, { "id": "fbe", "from": "fb", "to": "f5", "wire": "points" } ] }
+  ]
+}
+    </script>
+
+    <script>
+      (function () {
+        const $ = (s) => document.querySelector(s);
+        const SVGNS = "http://www.w3.org/2000/svg";
+        const spec = JSON.parse($("#spec").textContent);
+        const steps = spec.steps || [];
+        const CELL_W = 150, CELL_H = 72, PAD = 16, NODE_H = 36;
+        const answers = {};   // step index -> prediction text
+        const reasons = {};   // distractor id -> reason text
+        let picked = null, revealed = false, cur = 0;
+
+        // ---------- text: plain text with `backticks` as inline code ----------
+        function richText(el, text) {
+          el.textContent = "";
+          String(text || "").split("`").forEach((part, i) => {
+            if (!part) return;
+            if (i % 2) { const c = document.createElement("code"); c.textContent = part; el.appendChild(c); }
+            else el.appendChild(document.createTextNode(part));
+          });
+          return el;
+        }
+
+        // ---------- theme ----------
+        const root = document.documentElement, THEME_KEY = "rebuild-mental-model-theme";
+        function applyTheme(t) { root.dataset.theme = t; $("#theme-toggle").textContent = t === "dark" ? "☀" : "🌙"; }
+        applyTheme(localStorage.getItem(THEME_KEY) || root.dataset.theme || "dark");
+        $("#theme-toggle").addEventListener("click", () => { const n = root.dataset.theme === "dark" ? "light" : "dark"; applyTheme(n); localStorage.setItem(THEME_KEY, n); });
+
+        // ---------- drawing: one grammar for every diagram ----------
+        const nodeW = (n) => Math.max(64, Math.min(CELL_W - 20, 20 + 8.6 * String(n.text).length));
+        const center = (n) => [PAD + n.at[0] * CELL_W + CELL_W / 2, PAD + n.at[1] * CELL_H + CELL_H / 2];
+        const svgEl = (tag, attrs, parent) => { const e = document.createElementNS(SVGNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+
+        function drawShape(g, shape, cx, cy, w, h) {
+          const x = cx - w / 2, y = cy - h / 2;
+          if (shape === "pill") return svgEl("rect", { class: "shape", x, y, width: w, height: h, rx: h / 2 }, g);
+          if (shape === "circle") return svgEl("circle", { class: "shape", cx, cy, r: Math.max(w, h) / 2 }, g);
+          if (shape === "diamond") return svgEl("polygon", { class: "shape", points: `${cx},${y - 4} ${x + w + 6},${cy} ${cx},${y + h + 4} ${x - 6},${cy}` }, g);
+          if (shape === "tag") return svgEl("polygon", { class: "shape", points: `${x + 10},${y} ${x + w},${y} ${x + w},${y + h} ${x + 10},${y + h} ${x},${cy}` }, g);
+          return svgEl("rect", { class: "shape", x, y, width: w, height: h, rx: 4 }, g);
+        }
+
+        // where the segment from (cx,cy) toward (tx,ty) leaves a w*h box
+        function exitPoint(cx, cy, tx, ty, w, h) {
+          const dx = tx - cx, dy = ty - cy;
+          if (!dx && !dy) return [cx, cy];
+          const s = Math.min(dx ? (w / 2) / Math.abs(dx) : Infinity, dy ? (h / 2) / Math.abs(dy) : Infinity);
+          return [cx + dx * s, cy + dy * s];
+        }
+
+        function drawDiagram(svg, nodes, edges) {
+          svg.textContent = "";
+          const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
+          const cols = Math.max(1, ...nodes.map((n) => n.at[0] + 1)), rows = Math.max(1, ...nodes.map((n) => n.at[1] + 1));
+          svg.setAttribute("viewBox", `0 0 ${PAD * 2 + cols * CELL_W} ${PAD * 2 + rows * CELL_H}`);
+          const els = {};
+          for (const e of edges) {
+            const a = byId[e.from], b = byId[e.to];
+            if (!a || !b) continue;
+            const style = (spec.wires[e.wire] || {}).style || "solid";
+            const g = svgEl("g", { class: "el", "data-id": e.id }, svg);
+            const [ax, ay] = center(a), [bx, by] = center(b);
+            const [x1, y1] = exitPoint(ax, ay, bx, by, nodeW(a), NODE_H);
+            const [x2, y2] = exitPoint(bx, by, ax, ay, nodeW(b) + 4, NODE_H + 4);
+            const line = svgEl("line", { class: "wire", x1, y1, x2, y2 }, g);
+            if (style === "dashed") line.setAttribute("stroke-dasharray", "7 5");
+            if (style === "dotted") line.setAttribute("stroke-dasharray", "2 4");
+            svgEl("circle", { class: "tip", cx: x2, cy: y2, r: 3.5 }, g);
+            if (e.text) richSvgText(svgEl("text", { class: "wire-label", x: (x1 + x2) / 2, y: (y1 + y2) / 2 - 6 }, g), e.text);
+            els[e.id] = g;
+          }
+          for (const n of nodes) {
+            const shape = (spec.kinds[n.kind] || {}).shape || "rect";
+            const g = svgEl("g", { class: "el", "data-id": n.id }, svg);
+            const [cx, cy] = center(n);
+            drawShape(g, shape, cx, cy, nodeW(n), NODE_H);
+            richSvgText(svgEl("text", { class: "label", x: cx, y: cy }, g), n.text);
+            els[n.id] = g;
+          }
+          return els;
+        }
+        function richSvgText(t, s) { t.textContent = String(s).replace(/`/g, ""); return t; }
+
+        function legend() {
+          const box = $("#legend");
+          for (const k in spec.kinds) {
+            const s = document.createElement("span");
+            const svg = svgEl("svg", { width: 34, height: 20, viewBox: "0 0 34 20" });
+            drawShape(svg, spec.kinds[k].shape, 17, 10, 28, 14);
+            s.append(svg, spec.kinds[k].label || k); box.appendChild(s);
+          }
+          for (const w in spec.wires) {
+            const s = document.createElement("span");
+            const svg = svgEl("svg", { width: 34, height: 20, viewBox: "0 0 34 20" });
+            const l = svgEl("line", { class: "wire", x1: 2, y1: 10, x2: 28, y2: 10 }, svg);
+            const st = spec.wires[w].style;
+            if (st === "dashed") l.setAttribute("stroke-dasharray", "7 5");
+            if (st === "dotted") l.setAttribute("stroke-dasharray", "2 4");
+            svgEl("circle", { class: "tip", cx: 28, cy: 10, r: 3 }, svg);
+            s.append(svg, spec.wires[w].label || w); box.appendChild(s);
+          }
+        }
+
+        // ---------- walkthrough ----------
+        const panelEls = {};
+        const allItems = [];
+        for (const p of ["old", "new"]) {
+          const panel = spec.panels[p];
+          if (!panel) { $("#" + p).closest(".panel").remove(); continue; }
+          $("#" + p + "-label").textContent = panel.label || p;
+          Object.assign(panelEls, drawDiagram($("#" + p), panel.nodes || [], panel.edges || []));
+          allItems.push(...(panel.nodes || []), ...(panel.edges || []));
+        }
+
+        const caseBox = $("#case");
+        if (spec.caseStyle === "code") caseBox.classList.add("code");
+        const caseLines = (spec.case || []).map((t) => { const d = richText(document.createElement("div"), t); d.className = "ln"; caseBox.appendChild(d); return d; });
+        if (!caseLines.length) caseBox.remove();
+
+        const dots = steps.map(() => { const d = document.createElement("span"); d.className = "dot"; $("#dots").appendChild(d); return d; });
+
+        const committed = (i) => !steps[i] || !steps[i].ask || (answers[i] || "").trim().length > 0;
+
+        function render() {
+          const s = steps[cur] || {};
+          const hot = new Set(s.hot || []);
+          for (const item of allItems) {
+            const g = panelEls[item.id]; if (!g) continue;
+            const enter = item.enter || 0, exit = item.exit == null ? Infinity : item.exit;
+            g.classList.toggle("hidden", cur < enter);
+            g.classList.toggle("gone", cur >= exit);
+            g.classList.toggle("hot", hot.has(item.id));
+            g.classList.toggle("dim", hot.size > 0 && !hot.has(item.id) && cur >= enter && cur < exit);
+          }
+          caseLines.forEach((d, i) => { d.classList.toggle("now", i === s.line); d.classList.toggle("later", s.line != null && i > s.line); });
+          const unlocked = cur === steps.length - 1;
+          $("#distractors")?.classList.toggle("locked", !unlocked);
+          if ($("#dhint")) $("#dhint").textContent = unlocked
+            ? "Each picture is drawn in the same grammar. Pick the one you think is right, write what's wrong with the others, then reveal."
+            : "Unlocks at the last step, so these pictures can't give away a prediction.";
+          dots.forEach((d, i) => { d.className = "dot" + (i === cur ? " current" : i < cur ? " done" : ""); });
+          $("#count").textContent = `${cur + 1} / ${steps.length}`;
+
+          const card = $("#card"); card.textContent = "";
+          const num = document.createElement("div"); num.className = "num"; num.textContent = `STEP ${cur + 1}`;
+          card.append(num, richText(document.createElement("div"), s.say));
+          if (s.ask) {
+            const q = richText(document.createElement("div"), "Predict first: " + s.ask); q.className = "ask";
+            const ta = document.createElement("textarea"); ta.name = "prediction-" + cur; ta.placeholder = "Your prediction and the reasoning behind it, including where you guessed."; ta.value = answers[cur] || "";
+            ta.addEventListener("input", () => { answers[cur] = ta.value; syncNav(); });
+            const row = document.createElement("div"); row.className = "row";
+            const unsure = document.createElement("button"); unsure.className = "pill"; unsure.textContent = "Not sure (commit anyway)";
+            unsure.addEventListener("click", () => { if (!ta.value.trim()) { ta.value = "(not sure)"; answers[cur] = ta.value; } syncNav(); });
+            row.appendChild(unsure); card.append(q, ta, row);
+          }
+          syncNav();
+        }
+        function syncNav() {
+          $("#prev").setAttribute("aria-disabled", String(cur === 0));
+          $("#next").setAttribute("aria-disabled", String(cur >= steps.length - 1 || !committed(cur)));
+          $("#next").title = committed(cur) ? "" : "Write a prediction first";
+        }
+        function go(i) { if (i < 0 || i >= steps.length) return; if (i > cur && !committed(cur)) return; cur = i; render(); }
+        $("#prev").addEventListener("click", () => go(cur - 1));
+        $("#next").addEventListener("click", () => go(cur + 1));
+        document.addEventListener("keydown", (e) => {
+          if (e.target.closest && e.target.closest("textarea")) return;
+          if (e.key === "ArrowRight") go(cur + 1);
+          if (e.key === "ArrowLeft") go(cur - 1);
+        });
+
+        // ---------- distractors ----------
+        const dlist = spec.distractors || [];
+        if (!dlist.length) $("#distractors").remove();
+        else if (spec.distractorAsk) richText($("#dask"), spec.distractorAsk);
+        const dcards = dlist.map((d) => {
+          const card = document.createElement("div"); card.className = "dcard";
+          const head = document.createElement("label"); head.className = "head";
+          const radio = document.createElement("input"); radio.type = "radio"; radio.name = "pick"; radio.value = d.id;
+          radio.addEventListener("change", () => { picked = d.id; dcards.forEach((c) => c.classList.toggle("picked", c === card)); $("#reveal").setAttribute("aria-disabled", "false"); });
+          head.append(radio, `${d.id}. `, richText(document.createElement("span"), d.label));
+          const svg = svgEl("svg", { role: "img" });
+          const ta = document.createElement("textarea"); ta.name = "reason-" + d.id; ta.placeholder = "What's wrong (or right) with this picture?";
+          ta.addEventListener("input", () => { reasons[d.id] = ta.value; });
+          const verdict = richText(document.createElement("div"), (d.right ? "Right. " : "Wrong. ") + (d.why || ""));
+          verdict.className = "verdict " + (d.right ? "right" : "wrong");
+          card.append(head, svg, ta, verdict); $("#dgrid").appendChild(card);
+          drawDiagram(svg, d.nodes || [], d.edges || []);
+          return card;
+        });
+        $("#reveal").addEventListener("click", () => { if (!picked) return; revealed = true; $("#distractors").classList.add("revealed"); });
+
+        // ---------- export: the reader's commits, back to chat ----------
+        function toMarkdown() {
+          const out = [`## ${spec.title}: my answers`];
+          const asked = steps.map((s, i) => [s, i]).filter(([s]) => s.ask);
+          if (asked.length) {
+            out.push("", "### Predictions");
+            for (const [s, i] of asked) out.push(`- Step ${i + 1} (${s.ask}): ${(answers[i] || "(no answer)").trim()}`);
+          }
+          if (dlist.length) {
+            out.push("", `### ${spec.distractorAsk || "Which picture is right"}`, `- Picked: ${picked || "(none)"}${revealed ? " (after reveal: " + ((dlist.find((d) => d.id === picked) || {}).right ? "right" : "wrong") + ")" : ""}`);
+            for (const d of dlist) if ((reasons[d.id] || "").trim()) out.push(`- ${d.id}. ${d.label}: ${reasons[d.id].trim()}`);
+          }
+          return out.join("\n");
+        }
+        async function copyText(text) {
+          try { await navigator.clipboard.writeText(text); }
+          catch (e) { const ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); }
+        }
+        $("#export").addEventListener("click", async () => {
+          await copyText(toMarkdown());
+          const b = $("#export"); b.classList.add("flash"); b.textContent = "✓ Copied"; setTimeout(() => { b.classList.remove("flash"); b.textContent = "⧉ Copy for chat"; }, 1400);
+        });
+
+        $("#title").textContent = spec.title || ""; document.title = (spec.title || "Mental model") + ": rebuild";
+        richText($("#topic"), spec.topic || "");
+        legend();
+        render();
+      })();
+    </script>
+  </body>
+</html>

@@ -30,12 +30,12 @@ Make learnings stick by retrieving them, not rereading them. Every review has th
 
 - `grep -n '^## ' <log>` lists every entry's title, due date, and grades.
 - Fetch entries with the Read tool (offset and limit from the grep), not Bash, so their text stays out of visible command output before a recall.
-- Change the log only by appending entries (`cat >> <log>`) and by one-line Edits of a heading; leave the rest of the file as it is.
+- Change the log only by appending entries (`cat >> <log>`) and by one-line Edits of a heading.
 - Write entries in the language the user's instructions set for written notes; otherwise in the conversation's language.
 
 **Grades:** ✓ the takeaway and its caveat, without a hint. ~ everything right only after the hint, the takeaway without its caveat, or the gist with a wrong detail. ✗ the takeaway still missing or wrong after the hint, or a skipped cue.
 
-**Scheduling:** an entry saved without a review is due the next day, with no grades yet. After a ✓, count the consecutive ✓ at the end of its grades, including this one: 1 → due in 3 days, 2 → 7, 3 → 14, 4 → 30, 5 or more → 60. After ~ or ✗, it is due tomorrow. The user may tune the intervals; keep them expanding.
+**Scheduling:** an entry saved without a review is due tomorrow, with no grades yet. After a ✓, count the consecutive ✓ at the end of its grades, including this one: 1 → due in 3 days, 2 → 7, 3 → 14, 4 → 30, 5 or more → 60. After ~ or ✗, it is due tomorrow. The user may tune the intervals; keep them expanding.
 
 ## Save takeaways
 
@@ -48,16 +48,16 @@ For the end of a learning session, "save takeaways", "이거 기억해둬", or a
 
 Done when the log holds the kept entries; report how many and when the first is due.
 
-A `rebuild-mental-model` recap maps as: the rebuilt model and each rule become takeaways, its Exceptions line supplies caveats for the rules it covers, and its Sources go into `source`.
+From a `rebuild-mental-model` recap, the rebuilt model and each rule become takeaways, its Exceptions line supplies caveats for the rules it covers, and its Sources go into `source`.
 
 ## Review
 
 For "복습하자", "review", "quiz me", or a named day, topic, or source already in the log.
 
 1. **Select** due entries from the grep index, oldest due first, or the entries matching what the user named; then read them and interleave sources so entries from one session don't answer each other. Take up to 5 and say how many more are due. With no log or nothing due, say so, give the next due date, and offer catch-up.
-2. **Cue** one entry per turn with a fresh question or small case built from it, from a new angle each time: explain it, predict a case, find where it breaks, apply it to the user's own work. Every cue is answerable from the stored takeaway and caveat alone and uses none of their wording. End the turn.
+2. **Cue** one entry per turn with a question or small case built from it, from a new angle each time: explain it, predict a case, find where it breaks, apply it to the user's own work. Every cue is answerable from the stored takeaway and caveat alone and uses none of their wording. End the turn.
 3. **Hint** once when the recall misses the takeaway or its caveat, including a blank or "I don't know". End the turn for a second try.
-4. **Reveal and grade:** show the stored takeaway and caveat, name what matched, what was missing, and why it matters, and give the grade. Record it at once with a one-line Edit of the heading (new due date, grade appended), so a review stopped halfway keeps its progress. Put the next cue in the same message.
+4. **Reveal** the stored takeaway and caveat; name what matched, what was missing, and why it matters; give the grade. Record it at once with a one-line Edit of the heading (new due date, grade appended), so a review stopped halfway keeps its progress. Put the next cue in the same message.
 5. **Close** with a summary table: entry, grade, next due.
 
 - A skipped cue moves the review on. "Just show me" ends recall: the remaining selected entries appear as a plain summary and keep their grades and due dates, since nothing was recalled.

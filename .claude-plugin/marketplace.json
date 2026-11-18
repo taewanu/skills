@@ -16,6 +16,12 @@
         "ux-review",
         "time-tracking"
       ]
+    },
+    {
+      "name": "dambaek",
+      "source": "./plugins/dambaek",
+      "description": "담백 모드: 大味必淡. 기름기 없는 응답, 클릭으로 끝나는 선택.",
+      "category": "productivity"
     }
   ]
 }
